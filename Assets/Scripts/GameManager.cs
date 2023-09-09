@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 public enum DiscColor { Black, White}
 public enum GameState { Intro, InGame, GameOver}
+public enum gameTurn { You, Me}
 
 public class GameManager : SingletonMonoBehaviour<GameManager>
 {

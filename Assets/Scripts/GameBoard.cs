@@ -9,8 +9,9 @@ public class GameBoard : MonoBehaviour
     private List<GameObject> _discPrefabs;
     [SerializeField]
     private int _boardSize = 8;
+    private bool _isInitialized;
     private GameObject[,] _discs;
-    private bool _isBoardChange;
+    private bool _isBoardChanged;
     [SerializeField]
     private int _row;
     [SerializeField]
@@ -21,6 +22,9 @@ public class GameBoard : MonoBehaviour
     private DiscColor _discColor; 
     [SerializeField]
     private bool _do;
+    [SerializeField]
+    private List<GameObject> _reversible;    // コマを打った後の反転可能コマのリスト
+
 
     void Awake()
     {
@@ -30,89 +34,108 @@ public class GameBoard : MonoBehaviour
     void Start()
     {
         _discs = new GameObject[_boardSize, _boardSize];
-        // 初期４コマを配置する（イベントサブスクだけにしてInGame突入後がにすべき？）
-        _isBoardChange = false;
+        _isBoardChanged = false;
+        _isInitialized = false;
+        _reversible = new List<GameObject>();
         _do = false;
     }
 
     // Update is called once per frame
     void Update()
     {
+        if (!_isInitialized && GameManager.Ga)
+        {
+            // 初期４コマを配置する（Start でイベントサブスクだけにしてInGame突入後にすべき？）
+            StartCoroutine(BoardInitialize(0.1f));
+            _isInitialized = true;
+        }
         if (Input.GetKeyDown(KeyCode.Space))
         {
             SetDisc(_discType, _discColor, _row, _col);
             _do = false;
-            Debug.Log("_do: " + _do);
-        }
-        if (_isBoardChange)
+            //Debug.Log("_do: " + _do);
+            _isBoardChanged = true;
+        } 
+        else if (_isBoardChanged)
         {
             // 間をあけながらリバース処理開始
-            //StartCoroutine(BoardUpdate(0.1f));
-            _isBoardChange = false;
+            
+            StartCoroutine(BoardUpdate(0.1f));
+            _isBoardChanged = false;
         }
+    }
+    private IEnumerator BoardInitialize(float sec)
+    {
+        SetDisc(DiscType.NORMAL_DISC, DiscColor.Black, 3, 3);
+        yield return new WaitForSeconds(sec);
+        SetDisc(DiscType.NORMAL_DISC, DiscColor.White, 3, 4);
+        yield return new WaitForSeconds(sec);
+        SetDisc(DiscType.NORMAL_DISC, DiscColor.Black, 4, 4);
+        yield return new WaitForSeconds(sec);
+        SetDisc(DiscType.NORMAL_DISC, DiscColor.White, 4, 3);
     }
 
     private IEnumerator BoardUpdate(float seconds)
     {
-        foreach(GameObject disc in reversible)
+        foreach(GameObject disc in _reversible)
         {
             disc.GetComponent<Disc>().Reverse();
             yield return new WaitForSeconds(seconds);
         }
     }
 
-    private List<GameObject> reversible;
     void MakeReversibleList(int row, int col, bool isDiscBlack)
     {
+        _reversible.Clear();
         List<GameObject> _lineResult = new List<GameObject>();
 
         // 上探索
         _lineResult.Clear();
         SearchLine(ref _lineResult, row, col, new Vector2Int(0, 1), isDiscBlack);
         if (_lineResult.Count > 0)
-            reversible.AddRange(_lineResult);
+            _reversible.AddRange(_lineResult);
 
         // 右上探索
         _lineResult.Clear();
         SearchLine(ref _lineResult, row, col, new Vector2Int(1, 1), isDiscBlack);
         if (_lineResult.Count > 0)
-            reversible.AddRange(_lineResult);
+            _reversible.AddRange(_lineResult);
 
         // 右探索
         _lineResult.Clear();
         SearchLine(ref _lineResult, row, col, new Vector2Int(1, 0), isDiscBlack);
         if (_lineResult.Count > 0)
-            reversible.AddRange(_lineResult);
+            _reversible.AddRange(_lineResult);
 
         // 右下探索
         _lineResult.Clear();
         SearchLine(ref _lineResult, row, col, new Vector2Int(1, -1), isDiscBlack);
         if (_lineResult.Count > 0)
-            reversible.AddRange(_lineResult);
+            _reversible.AddRange(_lineResult);
 
         // 下探索
         _lineResult.Clear();
         SearchLine(ref _lineResult, row, col, new Vector2Int(0, -1), isDiscBlack);
         if (_lineResult.Count > 0)
-            reversible.AddRange(_lineResult);
+            _reversible.AddRange(_lineResult);
 
         // 左下探索
         _lineResult.Clear();
         SearchLine(ref _lineResult, row, col, new Vector2Int(-1, -1), isDiscBlack);
         if (_lineResult.Count > 0)
-            reversible.AddRange(_lineResult);
+            _reversible.AddRange(_lineResult);
 
         // 左探索
         _lineResult.Clear();
         SearchLine(ref _lineResult, row, col, new Vector2Int(-1, 0), isDiscBlack);
         if (_lineResult.Count > 0)
-            reversible.AddRange(_lineResult);
+            _reversible.AddRange(_lineResult);
 
         // 左上探索
         _lineResult.Clear();
         SearchLine(ref _lineResult, row, col, new Vector2Int(-1, 1), isDiscBlack);
         if (_lineResult.Count > 0)
-            reversible.AddRange(_lineResult);
+            _reversible.AddRange(_lineResult);
     }
 
     void SearchLine(ref List<GameObject> results, int row, int col, Vector2Int dirVec, bool isBlack)
@@ -180,11 +203,8 @@ public class GameBoard : MonoBehaviour
         Debug.Log($"_discs[{row}, {col}] = {_discs[row,col]}");
         _discs[row, col] = clone;
 
-        //// 反転可能なコマのリストを作る
-        //MakeReversibleList(row, col, DiscColor.Black == color);
-
-        ////_discs[row,col].
-        //_isBoardChange = true;
+        // 反転可能なコマのリストを作る
+        MakeReversibleList(row, col, DiscColor.Black == color);
     }
 }
 
