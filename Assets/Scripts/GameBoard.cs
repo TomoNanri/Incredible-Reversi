@@ -24,10 +24,20 @@ public class GameBoard : MonoBehaviour
     private bool _do;
     [SerializeField]
     private List<GameObject> _reversible;    // コマを打った後の反転可能コマのリスト
+    private List<Vector2Int> _directionList;    // ８方向を示す基底ベクトル
 
 
     void Awake()
     {
+        _directionList = new List<Vector2Int>();    // 探索方向を示すベクトルを格納
+        _directionList.Add(new Vector2Int(0, 1));   // 上
+        _directionList.Add(new Vector2Int(1, 1));   // 右上
+        _directionList.Add(new Vector2Int(1, 0));   // 右
+        _directionList.Add(new Vector2Int(1, -1));  // 右下
+        _directionList.Add(new Vector2Int(0, -1));  // 下
+        _directionList.Add(new Vector2Int(-1, -1)); // 左下
+        _directionList.Add(new Vector2Int(-1, 0));  // 左
+        _directionList.Add(new Vector2Int(-1, 1));  // 左上
     }
 
     // Start is called before the first frame update
@@ -43,7 +53,7 @@ public class GameBoard : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (!_isInitialized && GameManager.Ga)
+        if (!_isInitialized)
         {
             // 初期４コマを配置する（Start でイベントサブスクだけにしてInGame突入後にすべき？）
             StartCoroutine(BoardInitialize(0.1f));
@@ -89,53 +99,13 @@ public class GameBoard : MonoBehaviour
         _reversible.Clear();
         List<GameObject> _lineResult = new List<GameObject>();
 
-        // 上探索
-        _lineResult.Clear();
-        SearchLine(ref _lineResult, row, col, new Vector2Int(0, 1), isDiscBlack);
-        if (_lineResult.Count > 0)
-            _reversible.AddRange(_lineResult);
-
-        // 右上探索
-        _lineResult.Clear();
-        SearchLine(ref _lineResult, row, col, new Vector2Int(1, 1), isDiscBlack);
-        if (_lineResult.Count > 0)
-            _reversible.AddRange(_lineResult);
-
-        // 右探索
-        _lineResult.Clear();
-        SearchLine(ref _lineResult, row, col, new Vector2Int(1, 0), isDiscBlack);
-        if (_lineResult.Count > 0)
-            _reversible.AddRange(_lineResult);
-
-        // 右下探索
-        _lineResult.Clear();
-        SearchLine(ref _lineResult, row, col, new Vector2Int(1, -1), isDiscBlack);
-        if (_lineResult.Count > 0)
-            _reversible.AddRange(_lineResult);
-
-        // 下探索
-        _lineResult.Clear();
-        SearchLine(ref _lineResult, row, col, new Vector2Int(0, -1), isDiscBlack);
-        if (_lineResult.Count > 0)
-            _reversible.AddRange(_lineResult);
-
-        // 左下探索
-        _lineResult.Clear();
-        SearchLine(ref _lineResult, row, col, new Vector2Int(-1, -1), isDiscBlack);
-        if (_lineResult.Count > 0)
-            _reversible.AddRange(_lineResult);
-
-        // 左探索
-        _lineResult.Clear();
-        SearchLine(ref _lineResult, row, col, new Vector2Int(-1, 0), isDiscBlack);
-        if (_lineResult.Count > 0)
-            _reversible.AddRange(_lineResult);
-
-        // 左上探索
-        _lineResult.Clear();
-        SearchLine(ref _lineResult, row, col, new Vector2Int(-1, 1), isDiscBlack);
-        if (_lineResult.Count > 0)
-            _reversible.AddRange(_lineResult);
+        foreach(Vector2Int dir in _directionList)
+        {
+            _lineResult.Clear();
+            SearchLine(ref _lineResult, row, col, dir, isDiscBlack);
+            if (_lineResult.Count > 0)
+                _reversible.AddRange(_lineResult);
+        }
     }
 
     void SearchLine(ref List<GameObject> results, int row, int col, Vector2Int dirVec, bool isBlack)
