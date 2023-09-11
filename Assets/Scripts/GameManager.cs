@@ -9,10 +9,11 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
 {
     protected override bool dontDestroyOnLoad { get { return true; } }
     public DiscColor PlayerColor => _playerColor;
+    public GameState GameState => _gameState;
     [SerializeField]
     private DiscColor _playerColor = DiscColor.Black;
     [SerializeField]
-    private GameState _gameState;
+    public GameState _gameState;
 
     // Start is called before the first frame update
     void Start()

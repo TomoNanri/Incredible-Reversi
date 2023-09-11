@@ -170,7 +170,6 @@ public class GameBoard : MonoBehaviour
         }
 
         Debug.Log("Instance = " + clone);
-        Debug.Log($"_discs[{row}, {col}] = {_discs[row,col]}");
         _discs[row, col] = clone;
 
         // 反転可能なコマのリストを作る
