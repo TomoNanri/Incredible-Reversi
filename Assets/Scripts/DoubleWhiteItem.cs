@@ -1,13 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
+using TMPro;
 
 public class DoubleWhiteItem : MonoBehaviour
 {
     [SerializeField]
     private int _itemCount = 1;
-    private Text _countText;
+    private TextMeshProUGUI _countText;
     private GameObject _toggle;
     private GameManager _gm;
 
@@ -17,7 +17,7 @@ public class DoubleWhiteItem : MonoBehaviour
         var obj = transform.Find("Image/CountText");
         if (obj != null)
         {
-            _countText = obj.GetComponent<Text>();
+            _countText = obj.GetComponent<TextMeshProUGUI>();
             if (_countText != null)
             {
                 Debug.Log(_countText);
@@ -47,7 +47,7 @@ public class DoubleWhiteItem : MonoBehaviour
         }
         if (_countText == null) return;
 
-        _countText.text = $"{_itemCount}";
+        _countText.SetText($"{_itemCount}");
     }
 
 }
