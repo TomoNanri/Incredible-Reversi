@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7759780125234678779}
   - component: {fileID: 1951285788008494527}
+  - component: {fileID: 3650978850013534668}
   m_Layer: 0
   m_Name: NormalDisc
   m_TagString: Untagged
@@ -46,6 +47,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 16d31a13538cd2c4b8f09f845d915c32, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _reverse: 0
+--- !u!65 &3650978850013534668
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4322590231461628915}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &8488889229592558851
 GameObject:
   m_ObjectHideFlags: 0
