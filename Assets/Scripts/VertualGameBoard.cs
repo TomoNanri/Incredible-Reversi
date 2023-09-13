@@ -4,15 +4,17 @@ using UnityEngine;
 
 public class VertualGameBoard : MonoBehaviour
 {
-    public int BoardSize { get => _boardSize; }
-    
-    private int _boardSize = 8;
-
+    public int BoardSize => _boardSize;
+    [SerializeField]
+    private int _boardSize;
     private GameBoardCommon _boardCommon;
     private void Awake()
     {
         _boardCommon = GetComponent<GameBoardCommon>();
-        _boardCommon.BoardSize = _boardSize;
+    }
+    private void Start()
+    {
+        _boardSize = _boardCommon.BoardSize;
     }
     public int BlackCount
     {

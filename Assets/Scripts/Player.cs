@@ -18,6 +18,7 @@ public class Player : MonoBehaviour
     [SerializeField]
     private float _warningDisplyTime = 1.0f;
     private float _timer;
+    private bool _done = false;
 
     // Start is called before the first frame update
     void Start()
@@ -48,6 +49,17 @@ public class Player : MonoBehaviour
                 _warningMessage.SetActive(false);
             }
         }
+        if (_done)
+        {
+            _timer -= Time.deltaTime;
+            if (_timer <= 0)
+            {
+                _done = false;
+                _gm.Pass();
+            }
+            return;
+        }
+        
         if (Input.GetMouseButtonDown(0))
         {
             //  Ray‚Å‰Ÿ‚³‚ê‚½‘ÎÛ•¨‚ð”»’è‚µƒCƒxƒ“ƒg‘—‚é
@@ -60,6 +72,8 @@ public class Player : MonoBehaviour
                 if (_gameBoard.IsSettable(_myDiscColor, row, col))
                 {
                     _gameBoard.SetDisc(_myDiscType, _myDiscColor, row, col);
+                    _timer = 1.0f;
+                    _done = true;
                 }
                 else
                 {
@@ -69,4 +83,10 @@ public class Player : MonoBehaviour
             }
         }
     }
+    public void PassButton()
+    {
+        _timer = 2.0f;
+        _done = true;
+    }
+
 }

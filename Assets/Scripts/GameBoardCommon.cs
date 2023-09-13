@@ -6,11 +6,11 @@ public enum SearchMode { Normal, IgnoreSpecial }
 
 public class GameBoardCommon : MonoBehaviour
 {
-    public int BoardSize { get; set; }
+    public int BoardSize => _boardSize;
     public int BlackCount => _blackCount;
     public int WhiteCount => _whiteCount;
-
-    private int _boardSize;
+    [SerializeField]
+    private int _boardSize = 8;
     private GameManager _gm;
 
     [SerializeField]
@@ -44,6 +44,7 @@ public class GameBoardCommon : MonoBehaviour
         _gm = GameObject.Find("GameManager").GetComponent<GameManager>();
         _gm.OnInitializeGame += _initializeHandler;
 
+
         _discs = new GameObject[_boardSize, _boardSize];
         _reversible = new List<GameObject>();
     }
@@ -72,10 +73,20 @@ public class GameBoardCommon : MonoBehaviour
                 switch (child.tag)
                 {
                     case "NORMAL_DISC":
+                        if (child.GetComponent<Disc>().IsBlack())
+                        {
+                            _blackCount++;
+                        }
+                        else
+                        {
+                            _whiteCount++;
+                        }
                         break;
                     case "BLACK_DISC":
+                        _blackCount++;
                         break;
                     case "WHITE_DISC":
+                        _whiteCount++;
                         break;
                     default:
                         break;
@@ -217,6 +228,9 @@ public class GameBoardCommon : MonoBehaviour
     }
     public bool IsSettable(DiscColor color, int row, int col)
     {
+        if (_discs[row, col] != null)
+            return false;
+
         List<GameObject> checkWork = new List<GameObject>();
         MakeReversibleList(ref checkWork, row, col, DiscColor.Black == color, SearchMode.IgnoreSpecial);
         if (checkWork.Count > 0)
