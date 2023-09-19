@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 
-public class DoubleBlackItem : MonoBehaviour
+public class SpecialDiscItem : MonoBehaviour
 {
+    public int ItemCount => _itemCount;
     [SerializeField]
     private int _itemCount = 1;
     private TextMeshProUGUI _countText;
@@ -48,5 +49,18 @@ public class DoubleBlackItem : MonoBehaviour
         if (_countText == null) return;
 
         _countText.SetText($"{_itemCount}");
+    }
+    
+    public bool Use()
+    {
+        if (_itemCount > 0)
+        {
+            _itemCount--;
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 }

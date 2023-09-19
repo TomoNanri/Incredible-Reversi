@@ -18,6 +18,6 @@ public class NormalDisc : Disc
     public override void ReverseMotion()
     {
         transform.Rotate(new Vector3(1, 0, 0), 180);
-        Debug.Log("+++Reversed!+++");
+        Debug.Log($"{this.name}/{transform.parent.name}+++Reversed!+++");
     }
 }

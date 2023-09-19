@@ -11,9 +11,10 @@ public class GameBoard : MonoBehaviour
     [SerializeField]
     private int _boardSize;
     private GameBoardCommon _boardCommon;
-    private GameBoardCommon _vertualGameBoardCommon;
+    //private GameBoardCommon _vertualGameBoardCommon;
     private TextMeshProUGUI _blackPoint;
     private TextMeshProUGUI _whitePoint;
+    private GameManager _gm;
 
     void Awake()
     {
@@ -21,13 +22,14 @@ public class GameBoard : MonoBehaviour
     }
     private void Start()
     {
+        _gm = GameObject.Find("GameManager").GetComponent<GameManager>();
         _boardSize = _boardCommon.BoardSize;
-        _vertualGameBoardCommon = GameObject.Find("AIPlayer/VertualBoard").GetComponent<GameBoardCommon>();
+        //_vertualGameBoardCommon = GameObject.Find("AIPlayer/VertualBoard").GetComponent<GameBoardCommon>();
     }
     public void SetDisc(DiscType dt, DiscColor color, int row, int col)
     {
         _boardCommon.SetDisc(dt, color, row, col);
-        _vertualGameBoardCommon.SetDisc(dt, color, row, col);
+        //_vertualGameBoardCommon.SetDisc(dt, color, row, col);
     }
     public bool IsSettable(DiscColor color, int row, int col)
     {

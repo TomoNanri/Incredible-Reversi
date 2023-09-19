@@ -9,7 +9,7 @@ public class Player : MonoBehaviour
     [SerializeField]
     private DiscType _myDiscType = DiscType.NORMAL_DISC;
     [SerializeField]
-    private DiscColor _myDiscColor = DiscColor.Black;
+    private DiscColor _myColor = DiscColor.Black;
 
     private GameManager _gm;
     private GameBoard _gameBoard;
@@ -24,6 +24,8 @@ public class Player : MonoBehaviour
     void Start()
     {
         _gm = GameObject.Find("GameManager").GetComponent<GameManager>();
+        _gm.OnStartGame += StartGameHandler;
+
         _gameBoard = GameObject.Find("GameBoard").GetComponent<GameBoard>();
         _warningMessage = transform.Find("WarningCanvas").gameObject;
         _warningMessage.SetActive(false);
@@ -55,7 +57,7 @@ public class Player : MonoBehaviour
             if (_timer <= 0)
             {
                 _done = false;
-                _gm.Pass();
+                _gm.TurnEnd();
             }
             return;
         }
@@ -69,9 +71,9 @@ public class Player : MonoBehaviour
                 Debug.Log("Position = " + hitObj.point + " Object = "+ hitObj.collider.gameObject.name);
                 int row = (int)hitObj.point.y;
                 int col = (int)hitObj.point.x;
-                if (_gameBoard.IsSettable(_myDiscColor, row, col))
+                if (_gameBoard.IsSettable(_myColor, row, col))
                 {
-                    _gameBoard.SetDisc(_myDiscType, _myDiscColor, row, col);
+                    _gameBoard.SetDisc(_myDiscType, _myColor, row, col);
                     _timer = 1.0f;
                     _done = true;
                 }
@@ -82,6 +84,11 @@ public class Player : MonoBehaviour
                 }
             }
         }
+    }
+    private void StartGameHandler()
+    {
+        _myColor = _gm.PlayerColor;
+        _warningMessage.SetActive(false);
     }
     public void PassButton()
     {

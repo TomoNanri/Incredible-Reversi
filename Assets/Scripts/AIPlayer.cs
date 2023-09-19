@@ -5,12 +5,22 @@ using System;
 
 public class AIPlayer : MonoBehaviour
 {
+    public enum AIState { Predicting, StartThink, Thinking, Complete }
+    private AIState _aiState;
+
     [SerializeField]
-    private DiscColor _myColor;
+    private DiscColor _myColor,_yourColor;
     private GameManager _gm;
     private GameBoard _gameBoard;
-    private VertualGameBoard _vertualGameBoard;
     private AIStateController _stateController;
+    private GameObject _passMessage;
+    private ThinkAI _thinkAI;
+
+    [SerializeField]
+    private float _messageDisplyTime = 1.0f;
+    [SerializeField]
+    private int _ai_Level;
+    private float _timer;
 
     // Start is called before the first frame update
     void Start()
@@ -18,72 +28,98 @@ public class AIPlayer : MonoBehaviour
         _gm = GameObject.Find("GameManager").GetComponent<GameManager>();
         _gm.OnStartGame += StartGameHandler;
         //_stateController = transform.Find("State").GetComponent<AIStateController>();
+        _thinkAI = GetComponent<ThinkAI>();
+        _thinkAI.ThinkEnd += ThinkEndHandler;
         //_stateController.Initialize((int)AIStateController.StateType.Wait);
         _gameBoard = GameObject.Find("GameBoard").GetComponent<GameBoard>();
-        Debug.Log($"[AIPlayer] BoardSize={_gameBoard.BoardSize}");
-        _vertualGameBoard = GameObject.Find("VertualBoard").GetComponent<VertualGameBoard>();
+        //_vertualGameBoard = GameObject.Find("VertualBoard").GetComponent<VertualGameBoard>();
+        _passMessage = transform.Find("PassCanvas").gameObject;
+        _passMessage.SetActive(false);
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (_gm.GameTurn != GameTurn.Me)
+        if (_gm.GameState != GameState.InGame)
+        {
             return;
-        Debug.Log("[AI] Start thinking!");
-        Think();
+        }
+        if (_passMessage.activeSelf)
+        {
+            _timer -= Time.deltaTime;
+            if (_timer <= 0)
+            {
+                _passMessage.SetActive(false);
+            }
+        }
+        if (_gm.GameTurn == GameTurn.You)
+        {
+            _aiState = AIState.Predicting;
+        }
+        else
+        {
+            if(_aiState == AIState.Predicting)
+            {
+                _aiState = AIState.StartThink;
+            }
+        }
+
+        switch(_aiState)
+        {
+            case AIState.Predicting:
+                break;
+
+            case AIState.StartThink:
+                // 先読みを開始する
+                _aiState = AIState.Thinking;
+                var result = _thinkAI.StartThinking(_ai_Level);
+                break;
+
+            case AIState.Thinking:
+                // 先読みを継続する
+                break;
+
+            case AIState.Complete:
+                // 決まった手（passを含む）を打つ
+                if (_thinkAI.PredictPos > -1)
+                {
+                    int row = _thinkAI.PredictPos / _gameBoard.BoardSize;
+                    int col = _thinkAI.PredictPos % _gameBoard.BoardSize;
+                    _gameBoard.SetDisc(_thinkAI.PredictDiscType, _myColor, row, col);
+                }
+                else
+                {
+                    // パスの場合
+                    _timer = _messageDisplyTime;
+                    _passMessage.SetActive(true);
+                }
+                _aiState = AIState.Predicting;
+                _gm.TurnEnd();
+
+                break;
+        }
 
     }
     private void StartGameHandler()
     {
+        _passMessage.SetActive(false);
         _myColor = _gm.PlayerColor==DiscColor.Black?DiscColor.White:DiscColor.Black;
+        _yourColor = _gm.PlayerColor!= DiscColor.Black?DiscColor.White:DiscColor.Black;
+        _aiState = AIState.Predicting;
+        _ai_Level = (int)(_gm.AI_Level * 9.0f +1.0f);
+        Debug.Log($"AI Level = {_ai_Level}");
     }
 
-    List<int> _settable = new List<int>();
-    private void Think()
+    private void ThinkEndHandler()
     {
-        int maxValue = int.MinValue;
-        int newRow = 0;
-        int newCol = 0;
-        _settable.Clear();
-        SearchSettable();
-        Debug.Log("[AI] " + _settable.Count);
-        if(_settable.Count == 0)
+        if(_aiState == AIState.Thinking)
         {
-            _gm.Pass();
-            return;
+            Debug.Log($"[{this.name}] Thinking End Handled! AIState = {_aiState}");
+            _aiState = AIState.Complete;
         }
-        foreach(int child in _settable)
+        else
         {
-            int row = child / _gameBoard.BoardSize;
-            int col = child % _gameBoard.BoardSize;
-
-            _vertualGameBoard.SetDisc(DiscType.NORMAL_DISC, _myColor, row, col);
-            var myCount = _myColor == DiscColor.Black ? _vertualGameBoard.BlackCount : _vertualGameBoard.WhiteCount;
-            if(maxValue < myCount)
-            {
-                newRow = row;
-                newCol = col;
-                maxValue = myCount;
-            }
-            _vertualGameBoard.RemoveDisc(row, col);
-        }
-        _gameBoard.SetDisc(DiscType.NORMAL_DISC, _myColor, newRow, newCol);
-        _gm.Pass();
-    }
-    private void SearchSettable()
-    {
-        Debug.Log("[Search] Start!");
-        Debug.Log($"[Search] BoardSize={_gameBoard.BoardSize}");
-
-        for (int i = 0; i < _gameBoard.BoardSize * _gameBoard.BoardSize; i++)
-        {
-            int row = i / _gameBoard.BoardSize;
-            int col = i % _gameBoard.BoardSize;
-            if (_gameBoard.IsSettable(_myColor, row, col))
-            {
-                _settable.Add(i);
-            }
-            Debug.Log($"[Search] MyColor={_myColor} Row={row} Col={col}");
+            Debug.Log($"[{this.name}] State Error!");
         }
     }
 }

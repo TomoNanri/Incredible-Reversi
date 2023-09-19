@@ -15,6 +15,11 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
     public DiscColor PlayerColor => _playerColor;
     public GameState GameState => _gameState;
     public GameTurn GameTurn => _gameTurn;
+    public float AI_Level => _AILevel;
+    public bool UseSpecialDisc => _useSpecialDisc;
+    public bool IsOnBGM => _isOnBGM;
+    public bool IsOnSE => _isOnSE;
+    public float SoundLevel => _soundLevel;
 
     private bool _useSpecialDisc = true;
     [SerializeField]
@@ -26,12 +31,17 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
     private GameObject _introPanel;
     private GameObject _gameOverPanel;
     private float _AILevel = 0;
+    private bool _isOnBGM = false;
+    private bool _isOnSE = false;
+    private float _soundLevel = 0;
     [SerializeField]
     bool _init = false;
 
     // Start is called before the first frame update
     void Start()
     {
+        var _gameBoard = GameObject.Find("GameBoard").GetComponent<GameBoardCommon>();
+        _gameBoard.OnCompleteSetting += DoAfterSetting;
         _gameState = GameState.Intro;
         _introPanel = GameObject.Find("IntroCanvas/Panel");
         //_introPanel.SetActive(true);
@@ -48,8 +58,13 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
             _init = false;
             InitializeGame();
         }
+
     }
-    public void InitializeGame()
+    private void DoAfterSetting()
+    {
+        _gameState = GameState.InGame;
+    }
+    private void InitializeGame()
     {
         if (OnInitializeGame!= null)
         {
@@ -59,19 +74,30 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
         _gameOverPanel.SetActive(false);
         _gameState = GameState.Intro;
     }
-    public void StartGame()
+    public void OnStartGameButton()
     {
+        // イントロ画面の設定値を読み込む
         _useSpecialDisc = _introPanel.transform.Find("Panel (1)/Select Yes").GetComponent<Toggle>().isOn;
         _playerColor = _introPanel.transform.Find("Panel (2)/SelectBlack").GetComponent<Toggle>().isOn ? DiscColor.Black : DiscColor.White;
+        _AILevel = _introPanel.transform.Find("Panel (3)/Slider").GetComponent<Slider>().value;
+        _isOnBGM = _introPanel.transform.Find("Panel (4)/Select On").GetComponent<Toggle>().isOn;
+        _isOnSE = _introPanel.transform.Find("Panel (5)/Select On").GetComponent<Toggle>().isOn;
+        _soundLevel = _introPanel.transform.Find("Panel (6)/Slider").GetComponent<Slider>().value;
+
+        // イントロ画面を消す
         _introPanel.SetActive(false);
+
+        // 各オブジェクトの起動処理
         if (OnStartGame != null)
         {
             OnStartGame.Invoke();
         }
+
+        // ターン設定
         _gameTurn = _playerColor == DiscColor.Black ? GameTurn.You : GameTurn.Me;
-        _gameState = GameState.InGame;
+        Debug.Log($"[GameManager]_gameTurn={_gameTurn}");
     }
-    public void Pass()
+    public void TurnEnd()
     {
         _gameTurn = _gameTurn == GameTurn.Me ? GameTurn.You : GameTurn.Me;
     }

@@ -1,29 +1,37 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 public enum DiscType { NORMAL_DISC = 0, BLACK_DISC = 1, WHITE_DISC = 2 }
 public enum SearchMode { Normal, IgnoreSpecial }
+//public enum BoardState { NoDisc, InSetting, CompleteSetting}
 
 public class GameBoardCommon : MonoBehaviour
 {
+    public Action OnCompleteSetting;
     public int BoardSize => _boardSize;
     public int BlackCount => _blackCount;
     public int WhiteCount => _whiteCount;
-    [SerializeField]
+    public bool IsBoardChanged => _isBoardChanged;
+
     private int _boardSize = 8;
     private GameManager _gm;
 
     [SerializeField]
     private List<GameObject> _discPrefabs;
-    private bool _isInitialized;
+    //private BoardState _boardState = BoardState.NoDisc;
     private GameObject[,] _discs;
     private bool _isBoardChanged;
     private int _blackCount = 0;
     private int _whiteCount = 0;
     [SerializeField]
+    private float _reverseInterval = 1.0f;
+    [SerializeField]
     private List<GameObject> _reversible;    // コマを打った後の反転可能コマのリスト
     // ８方向を示す基底ベクトル
     private List<Vector2Int> _directionList;
+
+    private AudioSource _audioSource;
 
     void Awake()
     {
@@ -42,11 +50,14 @@ public class GameBoardCommon : MonoBehaviour
     void Start()
     {
         _gm = GameObject.Find("GameManager").GetComponent<GameManager>();
-        _gm.OnInitializeGame += _initializeHandler;
+        _gm.OnInitializeGame += InitializeHandler;
+        _gm.OnStartGame += StartHandler;
 
 
         _discs = new GameObject[_boardSize, _boardSize];
         _reversible = new List<GameObject>();
+
+        _audioSource = GetComponent<AudioSource>();
     }
 
     // Update is called once per frame
@@ -54,16 +65,17 @@ public class GameBoardCommon : MonoBehaviour
     {
         if (_gm.GameState == GameState.InGame)
         {
-            if (!_isInitialized)
-            {
-                // 初期４コマを配置する（Start でイベントサブスクだけにしてInGame突入後にすべき？）
-                StartCoroutine(BoardInitialize(0.1f));
-                _isInitialized = true;
-            }
             if (_isBoardChanged)
             {
-                // 間をあけながらリバース処理開始
-                StartCoroutine(BoardUpdate(0.1f));
+                if (gameObject.name == "GameBoard")
+                {
+                    // 間をあけながらリバース処理開始
+                    StartCoroutine(BoardUpdate(_reverseInterval));
+                }
+                else
+                {
+                    BoardUpdateBatch();
+                }
                 _isBoardChanged = false;
             }
             _blackCount = 0;
@@ -94,7 +106,11 @@ public class GameBoardCommon : MonoBehaviour
             }
         }
     }
-    private void _initializeHandler()
+    private void StartHandler()
+    {
+        StartCoroutine(BoardSetUp(_reverseInterval));
+    }
+    private void InitializeHandler()
     {
         foreach (Transform child in this.transform)
         {
@@ -110,10 +126,11 @@ public class GameBoardCommon : MonoBehaviour
             }
         }
         _isBoardChanged = false;
-        _isInitialized = false;
     }
-    private IEnumerator BoardInitialize(float sec)
+    private IEnumerator BoardSetUp(float sec)
     {
+        //_boardState = BoardState.InSetting;
+
         SetDisc(DiscType.NORMAL_DISC, DiscColor.Black, 3, 3);
         yield return new WaitForSeconds(sec);
         SetDisc(DiscType.NORMAL_DISC, DiscColor.White, 3, 4);
@@ -121,14 +138,31 @@ public class GameBoardCommon : MonoBehaviour
         SetDisc(DiscType.NORMAL_DISC, DiscColor.Black, 4, 4);
         yield return new WaitForSeconds(sec);
         SetDisc(DiscType.NORMAL_DISC, DiscColor.White, 4, 3);
+        //_boardState = BoardState.CompleteSetting;
+        if(OnCompleteSetting != null)
+        {
+            OnCompleteSetting.Invoke();
+        }
     }
 
     private IEnumerator BoardUpdate(float seconds)
     {
         foreach (GameObject disc in _reversible)
         {
+            if (_gm.IsOnSE)
+            {
+                _audioSource.Play();
+            }
             disc.GetComponent<Disc>().Reverse();
             yield return new WaitForSeconds(seconds);
+        }
+
+    }
+    private void BoardUpdateBatch()
+    {
+        foreach (GameObject disc in _reversible)
+        {
+            disc.GetComponent<Disc>().Reverse();
         }
     }
 
@@ -141,7 +175,9 @@ public class GameBoardCommon : MonoBehaviour
             _lineResult.Clear();
             SearchLine(ref _lineResult, row, col, dir, isDiscBlack, mode);
             if (_lineResult.Count > 0)
+            {
                 reversible.AddRange(_lineResult);
+            }
         }
     }
 
@@ -199,7 +235,7 @@ public class GameBoardCommon : MonoBehaviour
         GameObject prefab = _discPrefabs[(int)dt];
         Debug.Log("Prefab Name/Color = " + prefab + color);
         GameObject clone = Instantiate(prefab, this.transform);
-        clone.name = $"Disk{row * _boardSize + col}";
+        clone.name = $"Disc{row * _boardSize + col}";
         clone.tag = dt.ToString();
 
         // row/column の相対位置に移動する
@@ -207,13 +243,18 @@ public class GameBoardCommon : MonoBehaviour
         clone.transform.localPosition = newPos;
         clone.transform.localRotation = Quaternion.identity;
 
+        if (_gm.IsOnSE)
+        {
+            _audioSource.Play();
+        }
+
         // 指定された色に設定する
         if (dt == DiscType.NORMAL_DISC && color == DiscColor.Black)
         {
             clone.GetComponent<Disc>().Reverse();
         }
 
-        Debug.Log("Instance = " + clone);
+        Debug.Log($"[{this.name}] Instance = {clone}");
         _discs[row, col] = clone;
 
         // 反転可能なコマのリストを作る
