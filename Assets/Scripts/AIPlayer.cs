@@ -5,7 +5,7 @@ using System;
 
 public class AIPlayer : MonoBehaviour
 {
-    public enum AIState { Predicting, StartThink, Thinking, Complete }
+    public enum AIState { Waiting, StartThink, Thinking, ThinkComplete, DiscSetting, Passing }
     private AIState _aiState;
 
     [SerializeField]
@@ -17,7 +17,9 @@ public class AIPlayer : MonoBehaviour
     private ThinkAI _thinkAI;
 
     [SerializeField]
-    private float _messageDisplyTime = 1.0f;
+    private float _messageDisplyTime = 2.0f;
+    [SerializeField]
+    private float _turnEndDelay = 2.0f;
     [SerializeField]
     private int _ai_Level;
     private float _timer;
@@ -30,6 +32,8 @@ public class AIPlayer : MonoBehaviour
         //_stateController = transform.Find("State").GetComponent<AIStateController>();
         _thinkAI = GetComponent<ThinkAI>();
         _thinkAI.ThinkEnd += ThinkEndHandler;
+        _aiState = AIState.Waiting;
+
         //_stateController.Initialize((int)AIStateController.StateType.Wait);
         _gameBoard = GameObject.Find("GameBoard").GetComponent<GameBoard>();
         //_vertualGameBoard = GameObject.Find("VertualBoard").GetComponent<VertualGameBoard>();
@@ -40,33 +44,18 @@ public class AIPlayer : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (_gm.GameState != GameState.InGame)
-        {
-            return;
-        }
-        if (_passMessage.activeSelf)
-        {
-            _timer -= Time.deltaTime;
-            if (_timer <= 0)
-            {
-                _passMessage.SetActive(false);
-            }
-        }
-        if (_gm.GameTurn == GameTurn.You)
-        {
-            _aiState = AIState.Predicting;
-        }
-        else
-        {
-            if(_aiState == AIState.Predicting)
-            {
-                _aiState = AIState.StartThink;
-            }
-        }
-
         switch(_aiState)
         {
-            case AIState.Predicting:
+            case AIState.Waiting:
+                if (_gm.GameState != GameState.InGame)
+                {
+                    return;
+                }
+                if (_gm.GameTurn == GameTurn.You)
+                {
+                    return;
+                }
+                _aiState = AIState.StartThink;
                 break;
 
             case AIState.StartThink:
@@ -76,26 +65,52 @@ public class AIPlayer : MonoBehaviour
                 break;
 
             case AIState.Thinking:
-                // 先読みを継続する
+                // 先読みを継続する(イベントはハンドラで受信する)
                 break;
 
-            case AIState.Complete:
+            case AIState.ThinkComplete:
                 // 決まった手（passを含む）を打つ
                 if (_thinkAI.PredictPos > -1)
                 {
+                    // パスしない
                     int row = _thinkAI.PredictPos / _gameBoard.BoardSize;
                     int col = _thinkAI.PredictPos % _gameBoard.BoardSize;
                     _gameBoard.SetDisc(_thinkAI.PredictDiscType, _myColor, row, col);
+                    _timer = _turnEndDelay;
+                    _aiState = AIState.DiscSetting;
                 }
                 else
                 {
                     // パスの場合
                     _timer = _messageDisplyTime;
                     _passMessage.SetActive(true);
+                    _aiState = AIState.Passing;
                 }
-                _aiState = AIState.Predicting;
-                _gm.TurnEnd();
+                break;
 
+            case AIState.DiscSetting:
+                // 盤面変化中
+                _timer -= Time.deltaTime;
+                if (_timer <= 0)
+                {
+                    _gm.TurnEnd(false);
+                    _aiState = AIState.Waiting;
+                }
+                break;
+
+            case AIState.Passing:
+                // パスメッセージ掲示中
+                _timer -= Time.deltaTime;
+                if (_timer <= 0)
+                {
+                    _passMessage.SetActive(false);
+                    _gm.TurnEnd(true);
+                    _aiState = AIState.Waiting;
+                }
+                break;
+
+            default:
+                Debug.LogError($"[{this.name}] State Error!!!");
                 break;
         }
 
@@ -105,7 +120,7 @@ public class AIPlayer : MonoBehaviour
         _passMessage.SetActive(false);
         _myColor = _gm.PlayerColor==DiscColor.Black?DiscColor.White:DiscColor.Black;
         _yourColor = _gm.PlayerColor!= DiscColor.Black?DiscColor.White:DiscColor.Black;
-        _aiState = AIState.Predicting;
+        _aiState = AIState.Waiting;
         _ai_Level = (int)(_gm.AI_Level * 9.0f +1.0f);
         Debug.Log($"AI Level = {_ai_Level}");
     }
@@ -115,7 +130,7 @@ public class AIPlayer : MonoBehaviour
         if(_aiState == AIState.Thinking)
         {
             Debug.Log($"[{this.name}] Thinking End Handled! AIState = {_aiState}");
-            _aiState = AIState.Complete;
+            _aiState = AIState.ThinkComplete;
         }
         else
         {

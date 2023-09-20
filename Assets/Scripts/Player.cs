@@ -17,8 +17,11 @@ public class Player : MonoBehaviour
 
     [SerializeField]
     private float _warningDisplyTime = 1.0f;
+    [SerializeField]
+    private float _turnEndDelay = 2.0f;
     private float _timer;
     private bool _done = false;
+    private bool _isPassed = false;
 
     // Start is called before the first frame update
     void Start()
@@ -29,6 +32,7 @@ public class Player : MonoBehaviour
         _gameBoard = GameObject.Find("GameBoard").GetComponent<GameBoard>();
         _warningMessage = transform.Find("WarningCanvas").gameObject;
         _warningMessage.SetActive(false);
+
     }
 
     // Update is called once per frame
@@ -57,7 +61,7 @@ public class Player : MonoBehaviour
             if (_timer <= 0)
             {
                 _done = false;
-                _gm.TurnEnd();
+                _gm.TurnEnd(_isPassed);
             }
             return;
         }
@@ -74,7 +78,8 @@ public class Player : MonoBehaviour
                 if (_gameBoard.IsSettable(_myColor, row, col))
                 {
                     _gameBoard.SetDisc(_myDiscType, _myColor, row, col);
-                    _timer = 1.0f;
+                    _timer = _turnEndDelay;
+                    _isPassed = false;
                     _done = true;
                 }
                 else
@@ -93,6 +98,7 @@ public class Player : MonoBehaviour
     public void PassButton()
     {
         _timer = 2.0f;
+        _isPassed = true;
         _done = true;
     }
 

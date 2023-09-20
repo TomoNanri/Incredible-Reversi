@@ -25,7 +25,7 @@ public class GameBoardCommon : MonoBehaviour
     private int _blackCount = 0;
     private int _whiteCount = 0;
     [SerializeField]
-    private float _reverseInterval = 1.0f;
+    private float _reverseInterval = 0.5f;
     [SerializeField]
     private List<GameObject> _reversible;    // コマを打った後の反転可能コマのリスト
     // ８方向を示す基底ベクトル
@@ -67,15 +67,8 @@ public class GameBoardCommon : MonoBehaviour
         {
             if (_isBoardChanged)
             {
-                if (gameObject.name == "GameBoard")
-                {
-                    // 間をあけながらリバース処理開始
-                    StartCoroutine(BoardUpdate(_reverseInterval));
-                }
-                else
-                {
-                    BoardUpdateBatch();
-                }
+                // 間をあけながらリバース処理開始
+                StartCoroutine(BoardUpdate(_reverseInterval));
                 _isBoardChanged = false;
             }
             _blackCount = 0;
@@ -156,16 +149,7 @@ public class GameBoardCommon : MonoBehaviour
             disc.GetComponent<Disc>().Reverse();
             yield return new WaitForSeconds(seconds);
         }
-
     }
-    private void BoardUpdateBatch()
-    {
-        foreach (GameObject disc in _reversible)
-        {
-            disc.GetComponent<Disc>().Reverse();
-        }
-    }
-
     private void MakeReversibleList(ref List<GameObject> reversible, int row, int col, bool isDiscBlack, SearchMode mode)
     {
         List<GameObject> _lineResult = new List<GameObject>();

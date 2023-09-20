@@ -15,6 +15,7 @@ public class GameBoard : MonoBehaviour
     private TextMeshProUGUI _blackPoint;
     private TextMeshProUGUI _whitePoint;
     private GameManager _gm;
+    private IntroPanel _introPanel;
 
     void Awake()
     {
@@ -23,6 +24,8 @@ public class GameBoard : MonoBehaviour
     private void Start()
     {
         _gm = GameObject.Find("GameManager").GetComponent<GameManager>();
+        _introPanel = GameObject.Find("IntroCanvas/Panel").GetComponent<IntroPanel>();
+        _introPanel.OnChangeVolume += ChangeSEVolume;
         _boardSize = _boardCommon.BoardSize;
         //_vertualGameBoardCommon = GameObject.Find("AIPlayer/VertualBoard").GetComponent<GameBoardCommon>();
     }
@@ -34,6 +37,10 @@ public class GameBoard : MonoBehaviour
     public bool IsSettable(DiscColor color, int row, int col)
     {
         return _boardCommon.IsSettable(color, row, col);
+    }
+    private void ChangeSEVolume(float value)
+    {
+        GetComponent<AudioSource>().volume = value;
     }
 }
 
