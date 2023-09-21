@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using System;
+using TMPro;
 public enum DiscColor { Black, White}
 public enum GameState { StartUp, Intro, InitialSetting, InGame, GameOver}
 public enum GameTurn { You, Me}
@@ -20,6 +21,7 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
     public bool IsOnSE => _isOnSE;
     public float SoundLevel => _soundLevel;
     public DiscColor PlayerColor => _playerColor;
+    private GameBoardCommon _gameBoardCommon;
 
     private bool _useSpecialDisc = true;
     [SerializeField]
@@ -36,9 +38,10 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
     private GameObject _introPanel;
     private GameObject _gameOverPanel;
     private float _AILevel = 0;
+    [SerializeField]
     private bool _isOnBGM = false;
     private bool _isOnSE = false;
-    private float _soundLevel = 0;
+    private float _soundLevel = 0f;
     [SerializeField]
     private bool _isPassLastTurn = false;
 
@@ -47,8 +50,8 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
     // Start is called before the first frame update
     void Start()
     {
-        var _gameBoard = GameObject.Find("GameBoard").GetComponent<GameBoardCommon>();
-        _gameBoard.OnCompleteSetting += DoAfterSetting;
+        _gameBoardCommon = GameObject.Find("GameBoard").GetComponent<GameBoardCommon>();
+        _gameBoardCommon.OnCompleteSetting += DoAfterSetting;
         _gameState = GameState.StartUp;
         _introPanel = GameObject.Find("IntroCanvas/Panel");
         //_introPanel.SetActive(true);
@@ -115,6 +118,7 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
             case GameState.InGame:
                 if (_isGameOver)
                 {
+                    _isGameOver = false;
                     // Game Over âÊñ ï\é¶
                     if (_isOnBGM)
                     {
@@ -129,9 +133,10 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
             case GameState.GameOver:
                 if (_isOkButtonOn)
                 {
+                    _isOkButtonOn = false;
                     // Intro Ç÷Ç‡Ç«ÇÈèàóù
                     InitializeGame();
-                    _gameState = GameState.Intro;
+                    _gameState = GameState.StartUp;
                 }
                 break;
         }
@@ -155,16 +160,49 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
         _introPanel.SetActive(true);
         if (GameObject.Find("IntroCanvas/Panel/Panel (4)/Select On").GetComponent<Toggle>().isOn) 
         {
+            _isOnBGM = true;
             audioSource.Play();
         }
         else
         {
+            _isOnBGM = false;
             audioSource.Stop();
         }
         _gameOverPanel.SetActive(false);
     }
     private void GameOverProc()
     {
+        var _gameResultText = _gameOverPanel.transform.Find("Result Text").GetComponent<TextMeshProUGUI>();
+        if (PlayerColor == DiscColor.Black)
+        {
+            if(_gameBoardCommon.BlackCount > _gameBoardCommon.WhiteCount)
+            {
+                _gameResultText.SetText("You win!!!");
+            }
+            else
+            {
+                _gameResultText.SetText("You lose!!!");
+            }
+        }
+        else
+        {
+            if (_gameBoardCommon.BlackCount > _gameBoardCommon.WhiteCount)
+            {
+                _gameResultText.SetText("You lose!!!");
+            }
+            else
+            {
+                _gameResultText.SetText("You win!!!");
+            }
+        }
+        if (_isOnBGM)
+        {
+            audioSource.Play();
+        }
+        else
+        {
+            audioSource.Stop();
+        }
         _gameOverPanel.SetActive(true);
     }
     public void ToggleBGM()
