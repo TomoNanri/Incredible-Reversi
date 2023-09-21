@@ -122,8 +122,6 @@ public class GameBoardCommon : MonoBehaviour
     }
     private IEnumerator BoardSetUp(float sec)
     {
-        //_boardState = BoardState.InSetting;
-
         SetDisc(DiscType.NORMAL_DISC, DiscColor.Black, 3, 3);
         yield return new WaitForSeconds(sec);
         SetDisc(DiscType.NORMAL_DISC, DiscColor.White, 3, 4);
@@ -131,7 +129,6 @@ public class GameBoardCommon : MonoBehaviour
         SetDisc(DiscType.NORMAL_DISC, DiscColor.Black, 4, 4);
         yield return new WaitForSeconds(sec);
         SetDisc(DiscType.NORMAL_DISC, DiscColor.White, 4, 3);
-        //_boardState = BoardState.CompleteSetting;
         if(OnCompleteSetting != null)
         {
             OnCompleteSetting.Invoke();

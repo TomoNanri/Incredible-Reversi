@@ -8,14 +8,17 @@ public class IntroPanel : MonoBehaviour
 {
     public Action<float> OnChangeVolume;
     private GameManager _gm;
-    private Slider _slider;
+    private Slider _volumeSlider;
+    private Slider _AILevelSlider;
 
     // Start is called before the first frame update
     void Start()
     {
         _gm = GameObject.Find("GameManager").GetComponent<GameManager>();
-        _slider = transform.Find("Panel (6)/Slider").GetComponent<Slider>();
-        _slider.value = _gm.SoundLevel;
+        _volumeSlider = transform.Find("Panel (6)/Slider").GetComponent<Slider>();
+        _volumeSlider.value = _gm.SoundLevel;
+        _AILevelSlider = transform.Find("Panel (3)/Slider").GetComponent<Slider>();
+        _AILevelSlider.value = 0.5f;
     }
 
     // Update is called once per frame
@@ -27,7 +30,7 @@ public class IntroPanel : MonoBehaviour
     {
         if (OnChangeVolume != null)
         {
-            OnChangeVolume.Invoke(_slider.value);
+            OnChangeVolume.Invoke(_volumeSlider.value);
         }
     }
 }

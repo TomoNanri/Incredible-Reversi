@@ -41,7 +41,7 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
     [SerializeField]
     private bool _isOnBGM = false;
     private bool _isOnSE = false;
-    private float _soundLevel = 0f;
+    private float _soundLevel = 0.2f;
     [SerializeField]
     private bool _isPassLastTurn = false;
 
@@ -119,7 +119,7 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
                 if (_isGameOver)
                 {
                     _isGameOver = false;
-                    // Game Over 画面表示
+                    // Game Over 画面を表示し、BGMを戻す。
                     if (_isOnBGM)
                     {
                         audioSource.Play();
@@ -127,6 +127,7 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
                     GameOverProc();
                     _gameState = GameState.GameOver;
                 }
+
 
                 break;
 
