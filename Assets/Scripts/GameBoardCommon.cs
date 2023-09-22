@@ -13,13 +13,13 @@ public class GameBoardCommon : MonoBehaviour
     public int BlackCount => _blackCount;
     public int WhiteCount => _whiteCount;
     public bool IsBoardChanged => _isBoardChanged;
+    public bool IsReversingCompleted = true;
 
     private int _boardSize = 8;
     private GameManager _gm;
 
     [SerializeField]
     private List<GameObject> _discPrefabs;
-    //private BoardState _boardState = BoardState.NoDisc;
     private GameObject[,] _discs;
     private bool _isBoardChanged;
     private int _blackCount = 0;
@@ -146,6 +146,7 @@ public class GameBoardCommon : MonoBehaviour
             disc.GetComponent<Disc>().Reverse();
             yield return new WaitForSeconds(seconds);
         }
+        IsReversingCompleted = true;
     }
     private void MakeReversibleList(ref List<GameObject> reversible, int row, int col, bool isDiscBlack, SearchMode mode)
     {
@@ -210,7 +211,7 @@ public class GameBoardCommon : MonoBehaviour
         }
     }
 
-    public void SetDisc(DiscType dt, DiscColor color, int row, int col)
+    public int SetDisc(DiscType dt, DiscColor color, int row, int col)
     {
         // Board の child としてインスタンスを生成する
         GameObject prefab = _discPrefabs[(int)dt];
@@ -241,7 +242,9 @@ public class GameBoardCommon : MonoBehaviour
         // 反転可能なコマのリストを作る
         _reversible.Clear();
         MakeReversibleList(ref _reversible, row, col, DiscColor.Black == color, SearchMode.Normal);
-        _isBoardChanged = true;
+        if(_reversible.Count>0)
+            _isBoardChanged = true;
+        return _reversible.Count;
     }
     public void RemoveDisc(int row, int col)
     {
@@ -257,6 +260,18 @@ public class GameBoardCommon : MonoBehaviour
         MakeReversibleList(ref checkWork, row, col, DiscColor.Black == color, SearchMode.IgnoreSpecial);
         if (checkWork.Count > 0)
             return true;
+        return false;
+    }
+    public bool IsExisting(DiscColor color)
+    {
+        for(int i = 0; i < _boardSize; i++)
+        {
+            for(int j = 0; j < _boardSize; j++)
+            {
+                if (IsSettable(color, i, j))
+                    return true;
+            }
+        }
         return false;
     }
 }

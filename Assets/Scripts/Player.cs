@@ -5,7 +5,8 @@ using System;
 
 public class Player : MonoBehaviour
 {
-
+    public Action<BadgeEventArgs> OnBadgeEvent;
+    public int PlayerPoint => _reverseCount;
     [SerializeField]
     private DiscType _myDiscType = DiscType.NORMAL_DISC;
     [SerializeField]
@@ -13,6 +14,7 @@ public class Player : MonoBehaviour
 
     private GameManager _gm;
     private GameBoard _gameBoard;
+    private GameBoardCommon _gameBoardCommon;
     private GameObject _warningMessage;
 
     [SerializeField]
@@ -22,6 +24,7 @@ public class Player : MonoBehaviour
     private float _timer;
     private bool _done = false;
     private bool _isPassed = false;
+    private int _reverseCount = 0;
 
     // Start is called before the first frame update
     void Start()
@@ -30,6 +33,8 @@ public class Player : MonoBehaviour
         _gm.OnStartGame += StartGameHandler;
 
         _gameBoard = GameObject.Find("GameBoard").GetComponent<GameBoard>();
+        _gameBoardCommon = FindAnyObjectByType<GameBoardCommon>();
+
         _warningMessage = transform.Find("WarningCanvas").gameObject;
         _warningMessage.SetActive(false);
 
@@ -57,8 +62,7 @@ public class Player : MonoBehaviour
         }
         if (_done)
         {
-            _timer -= Time.deltaTime;
-            if (_timer <= 0)
+            if (_gameBoard.IsReversingCompleted)
             {
                 _done = false;
                 _gm.TurnEnd(_isPassed);
@@ -77,7 +81,7 @@ public class Player : MonoBehaviour
                 int col = (int)hitObj.point.x;
                 if (_gameBoard.IsSettable(_myColor, row, col))
                 {
-                    _gameBoard.SetDisc(_myDiscType, _myColor, row, col);
+                    _reverseCount = _gameBoard.SetDisc(_myDiscType, _myColor, row, col);
                     _timer = _turnEndDelay;
                     _isPassed = false;
                     _done = true;
@@ -94,12 +98,17 @@ public class Player : MonoBehaviour
     {
         _myColor = _gm.PlayerColor;
         _warningMessage.SetActive(false);
+        _reverseCount = 0;
     }
     public void PassButton()
     {
+        _reverseCount = 0;
         _timer = 2.0f;
         _isPassed = true;
         _done = true;
+        if(OnBadgeEvent != null)
+        {
+            OnBadgeEvent.Invoke(new BadgeEventArgs(BadgeEventType.PASS));
+        }
     }
-
 }

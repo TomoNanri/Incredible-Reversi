@@ -7,13 +7,14 @@ public class GameBoard : MonoBehaviour
     public int BoardSize => _boardSize;
     public int BlackCount => _boardCommon.BlackCount;
     public int WhiteCount => _boardCommon.WhiteCount;
+    public bool IsReversingCompleted { 
+        get { return _boardCommon.IsReversingCompleted; }
+        set { _boardCommon.IsReversingCompleted = value; }
+    }
 
     [SerializeField]
     private int _boardSize;
     private GameBoardCommon _boardCommon;
-    //private GameBoardCommon _vertualGameBoardCommon;
-    private TextMeshProUGUI _blackPoint;
-    private TextMeshProUGUI _whitePoint;
     private GameManager _gm;
     private IntroPanel _introPanel;
 
@@ -27,12 +28,11 @@ public class GameBoard : MonoBehaviour
         _introPanel = GameObject.Find("IntroCanvas/Panel").GetComponent<IntroPanel>();
         _introPanel.OnChangeVolume += ChangeSEVolume;
         _boardSize = _boardCommon.BoardSize;
-        //_vertualGameBoardCommon = GameObject.Find("AIPlayer/VertualBoard").GetComponent<GameBoardCommon>();
     }
-    public void SetDisc(DiscType dt, DiscColor color, int row, int col)
+    public int SetDisc(DiscType dt, DiscColor color, int row, int col)
     {
-        _boardCommon.SetDisc(dt, color, row, col);
-        //_vertualGameBoardCommon.SetDisc(dt, color, row, col);
+        IsReversingCompleted = false;
+        return _boardCommon.SetDisc(dt, color, row, col);
     }
     public bool IsSettable(DiscColor color, int row, int col)
     {

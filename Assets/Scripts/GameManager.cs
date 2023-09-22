@@ -5,7 +5,7 @@ using UnityEngine.UI;
 using System;
 using TMPro;
 public enum DiscColor { Black, White}
-public enum GameState { StartUp, Intro, InitialSetting, InGame, GameOver}
+public enum GameState { StartUp, Intro, InitialSetting, InGame, Judging, TurenInterval, GameOver}
 public enum GameTurn { You, Me}
 
 public class GameManager : SingletonMonoBehaviour<GameManager>
@@ -13,6 +13,8 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
     protected override bool dontDestroyOnLoad { get { return true; } }
     public Action OnInitializeGame;
     public Action OnStartGame;
+    public Action<BadgeEventArgs> OnBadgeEvent;
+
     public GameState GameState => _gameState;
     public GameTurn GameTurn => _gameTurn;
     public float AI_Level => _AILevel;
@@ -35,6 +37,8 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
     private bool _isOkButtonOn = false;
     [SerializeField]
     private GameTurn _gameTurn = default;
+    [SerializeField]
+    private float _turnInterval = 0.5f;
     private GameObject _introPanel;
     private GameObject _gameOverPanel;
     private float _AILevel = 0;
@@ -44,6 +48,7 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
     private float _soundLevel = 0.2f;
     [SerializeField]
     private bool _isPassLastTurn = false;
+    private bool _isPass = false;
 
     private AudioSource audioSource;
 
@@ -93,31 +98,38 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
 
                     // イントロ画面を消す
                     _introPanel.SetActive(false);
+                    _isInitialSettingCompleted = false;
+
+                    // player の選択に従ってターン設定する
+                    _gameTurn = _playerColor == DiscColor.Black ? GameTurn.You : GameTurn.Me;
+                    Debug.Log($"[{this.name}] Start Initialize! _gameTurn={_gameTurn}");
+                    _gameState = GameState.InitialSetting;
 
                     // 各オブジェクトへのゲーム開始通知（AIPlayer/GameBoard）
                     if (OnStartGame != null)
                     {
                         OnStartGame.Invoke();
                     }
-
-                    // ターン設定
-                    _gameTurn = _playerColor == DiscColor.Black ? GameTurn.You : GameTurn.Me;
-                    Debug.Log($"[GameManager]_gameTurn={_gameTurn}");
-                    _gameState = GameState.InitialSetting;
                 }
                 break;
 
             case GameState.InitialSetting:
                 if (_isInitialSettingCompleted)
                 {
+                    Debug.Log($"[{this.name}] Initialize complete! _gameTurn={_gameTurn}");
+
                     _isInitialSettingCompleted = false;
                     _gameState = GameState.InGame;
                 }
                 break;
 
+            case GameState.TurenInterval:
+                break;
+
             case GameState.InGame:
                 if (_isGameOver)
                 {
+                    OnBadgeEvent.Invoke(new BadgeEventArgs(BadgeEventType.GAMEOVER));
                     _isGameOver = false;
                     // Game Over 画面を表示し、BGMを戻す。
                     if (_isOnBGM)
@@ -127,8 +139,30 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
                     GameOverProc();
                     _gameState = GameState.GameOver;
                 }
+                break;
+
+            case GameState.Judging:
+                if (_gameBoardCommon.IsExisting(DiscColor.Black) || _gameBoardCommon.IsExisting(DiscColor.White))
+                {
+                    if (_isPass && _isPassLastTurn)
+                    {
+                        _isGameOver = true;
+                    }
+                    else
+                    {
+                        // 続行
+                        _isPassLastTurn = _isPass;
+                        _gameTurn = _gameTurn == GameTurn.Me ? GameTurn.You : GameTurn.Me;
+                    }
+                }
+                else
+                {
+                    _isGameOver = true;
+                }
 
 
+                _gameState = GameState.TurenInterval;
+                StartCoroutine(StartNextTurn(_turnInterval));
                 break;
 
             case GameState.GameOver:
@@ -142,6 +176,13 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
                 break;
         }
     }
+    private IEnumerator StartNextTurn(float sec)
+    {
+        Debug.Log($"[{this.name}]Waiting for Next turn Start... Current State = {_gameState}]");
+        yield return new WaitForSeconds(sec);
+        _gameState = GameState.InGame;
+    }
+
     private void ChangeBGMVolume(float value)
     {
         GetComponent<AudioSource>().volume = value;
@@ -169,6 +210,9 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
             _isOnBGM = false;
             audioSource.Stop();
         }
+        _isGameOver = false;
+        _isPass = false;
+        _isPassLastTurn = false;
         _gameOverPanel.SetActive(false);
     }
     private void GameOverProc()
@@ -241,15 +285,8 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
     }
     public void TurnEnd(bool isPass)
     {
-        if (!isPass || !_isPassLastTurn)
-        {
-            // 続行
-            _isPassLastTurn = isPass;
-            _gameTurn = _gameTurn == GameTurn.Me ? GameTurn.You : GameTurn.Me;
-        }
-        else
-        {
-            _isGameOver = true;
-        }
+        _isPass = isPass;
+        Debug.Log($"[{this.name}]TurnEnd is called! Current State = {_gameState}]");
+        _gameState = GameState.Judging;
     }
 }

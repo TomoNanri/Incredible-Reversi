@@ -65,10 +65,10 @@ public class ThinkAI : MonoBehaviour
                 _board[row, col] = CellState.None;
             }
         }
-        Debug.Log($"[ReadBoard/{this.name}] Started!");
+        //Debug.Log($"[ReadBoard/{this.name}] Started!");
         foreach(Transform child in _gameBoard.transform)
         {
-            Debug.Log($" - ReadBoard - object name = {child.name}/{child.tag}");
+            //Debug.Log($" - ReadBoard - object name = {child.name}/{child.tag}");
 
             switch (child.tag)
             {
@@ -104,7 +104,7 @@ public class ThinkAI : MonoBehaviour
                     break;
             }
         }
-        Debug.Log($"[ReadBoard/{this.name}] End!");
+        //Debug.Log($"[ReadBoard/{this.name}] End!");
 
         return _board;
     }
