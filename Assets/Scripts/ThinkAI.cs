@@ -380,7 +380,7 @@ public class ThinkAI : MonoBehaviour
 
         //Debug.Log($"[Thread:{Thread.CurrentThread.ManagedThreadId}] Proceed! depth ={currentDepth}/{maxDepth}");
 
-       
+        // 自分のコマの数を数える       
         foreach (CellState e in currentBoard)
         {
             if (IsMyColor(e))
@@ -404,6 +404,7 @@ public class ThinkAI : MonoBehaviour
 
         List<int> _candidateList = new List<int>();
 
+        // 打つことができる場所のリストを作る
         SearchSettable(ref _candidateList, currentBoard, targetColor);
 
         if (_candidateList.Count > 0)
@@ -414,7 +415,7 @@ public class ThinkAI : MonoBehaviour
             {
                 if (currentDepth == 0)
                 {
-                    //Debug.Log($"[Thread:{Thread.CurrentThread.ManagedThreadId}] Found Settable!");
+                    // 予測位置を仮決め（初期化）する
                     Debug.Log($"===> Cell [{next/_boardSize},{next%_boardSize}] Checking!");
                     if ( _predictPos == -1)
                     {
@@ -438,14 +439,12 @@ public class ThinkAI : MonoBehaviour
                 int row = next / _gameBoard.BoardSize;
                 int col = next % _gameBoard.BoardSize;
                 CellState[,] nextBoard = (CellState[,])currentBoard.Clone();   // 局面のコピー
-                //ShowBoard(nextBoard);
                 SetDisc(ref nextBoard, DiscType.NORMAL_DISC, targetColor, row, col);
-                //ShowBoard(nextBoard);
 
                 _subTreeValue = Proceed(nextBoard, currentDepth+1, maxDepth, nextTurn, beta);   // 先読み実行
                 if (turn == GameTurn.Me)
                 {
- 
+                    // 自分のターンなので最大値を選択する
                     if (_stageValue < _subTreeValue)
                     {
                         _stageValue = _subTreeValue;
@@ -459,6 +458,7 @@ public class ThinkAI : MonoBehaviour
                 }
                 else
                 {
+                    // 相手のターンなので最小値を選択する
                     if (_stageValue > _subTreeValue)
                     {
                         _stageValue = _subTreeValue;

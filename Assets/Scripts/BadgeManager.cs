@@ -82,7 +82,6 @@ public class BadgeManager : MonoBehaviour
         _FullFledged = false;
         _TUEE = false;
         _NicePass = false;
-        _Selfish = false;
         _TUEEE = false;
         //_TUEEEE = false;
         //_Zama = false;
