@@ -306,7 +306,7 @@ public class ThinkAI : MonoBehaviour
         SearchSettable(ref _candidates, _cells, _myColor);
         if (!KillerCheck(_candidates, _cells))
         {
-            int alpha = 0;
+            int alpha = int.MinValue;
             int beta = int.MaxValue;
 
             var result = await Task.Run(() => Proceed(_cells, _currentDepth, _maxDepth, GameTurn.Me, alpha, beta));
@@ -331,7 +331,7 @@ public class ThinkAI : MonoBehaviour
 
     private bool KillerCheck(List<int> candidates, CellState[,] board)
     {
-        int _maxValue = 0;
+        int _maxValue = int.MinValue;
         CellState[,] nextBoard = (CellState[,])board.Clone();
 
         foreach (int e in candidates)
@@ -386,8 +386,11 @@ public class ThinkAI : MonoBehaviour
                 }
             }
         }
-        if(_maxValue>0)
+        if (_maxValue > int.MinValue)
+        {
+            Debug.Log($"[{this.name}] *** Killer *** ");
             return true;
+        }
         return false;
     }
     private int Proceed(CellState[,] currentBoard, int currentDepth, int maxDepth, GameTurn turn, int alpha, int beta)
@@ -395,7 +398,7 @@ public class ThinkAI : MonoBehaviour
         int _subTreeValue;
         int _stageValue;
         int _minValue = int.MaxValue;
-        int _maxValue = 0;
+        int _maxValue = int.MinValue;
 
 
         // I’[‚Ü‚Å—ˆ‚½‚ç‹Ç–Ê•]‰¿‚ðŽÀs‚·‚é
@@ -492,14 +495,25 @@ public class ThinkAI : MonoBehaviour
         //Debug.Log($"+++ Current Candiate => [{_predictPos / _boardSize},{_predictPos % _boardSize}]");
         return _stageValue;
     }
-    private int Evaluate(CellState[,] currentBoard )
+
+    private int[,] _cellValue = { {  30, -12,   0,  -1,  -1,   0, -12,  30},
+                                  { -12, -15,  -3,  -3,  -3,  -3, -15, -12},
+                                  {   0,  -3,   0,  -1,  -1,   0,  -3,   0},
+                                  {  -1,  -3,  -1,  -1,  -1,  -1,  -3,  -1},
+                                  {  -1,  -3,  -1,  -1,  -1,  -1,  -3,  -1},
+                                  {   0,  -3,   0,  -1,  -1,   0,  -3,   0},
+                                  { -12, -15,  -3,  -3,  -3,  -3, -15, -12},
+                                  {  30, -12,   0,  -1,  -1,   0, -12,  30}};
+    private int Evaluate(CellState[,] currentBoard)
     {
-        int _value = 0; 
-        foreach (CellState e in currentBoard)
-        {
-            if (IsMyColor(e))
+        int _value = 0;
+        for(int row = 0; row < _boardSize; row++) {
+            for (int col = 0; col < _boardSize; col++)
             {
-                _value++;
+                if (IsMyColor(currentBoard[row,col]))
+                {
+                    _value += _cellValue[row, col];
+                }
             }
         }
         return _value;

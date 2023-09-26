@@ -16,6 +16,7 @@ public class Player : MonoBehaviour
     private GameBoard _gameBoard;
     private GameBoardCommon _gameBoardCommon;
     private GameObject _warningMessage;
+    private SpecialDiscItem _mySpecialDisc;
 
     [SerializeField]
     private float _warningDisplyTime = 1.0f;
@@ -81,6 +82,10 @@ public class Player : MonoBehaviour
                 int col = (int)hitObj.point.x;
                 if (_gameBoard.IsSettable(_myColor, row, col))
                 {
+                    if (_myDiscType != DiscType.NORMAL_DISC)
+                    {
+                        _mySpecialDisc.Use();
+                    }
                     _reverseCount = _gameBoard.SetDisc(_myDiscType, _myColor, row, col);
                     _timer = _turnEndDelay;
                     _isPassed = false;
@@ -94,9 +99,32 @@ public class Player : MonoBehaviour
             }
         }
     }
+    public void OnChangeSpecialDiscUse(bool state)
+    {
+        //if(state)
+        if(_myDiscType == DiscType.NORMAL_DISC)
+        {
+            if(_mySpecialDisc.ItemCount >0)
+            {
+                _myDiscType = (_myColor == DiscColor.Black) ? DiscType.BLACK_DISC : DiscType.WHITE_DISC;
+            }
+            else
+            {
+                _myDiscType = DiscType.NORMAL_DISC;
+            }
+        }
+        else
+        {
+            _myDiscType = DiscType.NORMAL_DISC;
+        }
+        Debug.Log($"[{this.name}] +++ Toggle Changed +++  Color={_myDiscType}");
+    }
     private void StartGameHandler()
     {
         _myColor = _gm.PlayerColor;
+        var SpecialItemName = (_myColor == DiscColor.Black) ? "SBlack" : "SWhite";
+        _mySpecialDisc = GameObject.Find(SpecialItemName).GetComponent<SpecialDiscItem>();
+
         _warningMessage.SetActive(false);
         _reverseCount = 0;
     }

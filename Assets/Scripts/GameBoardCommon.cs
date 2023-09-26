@@ -242,8 +242,7 @@ public class GameBoardCommon : MonoBehaviour
         // 反転可能なコマのリストを作る
         _reversible.Clear();
         MakeReversibleList(ref _reversible, row, col, DiscColor.Black == color, SearchMode.Normal);
-        if(_reversible.Count>0)
-            _isBoardChanged = true;
+        _isBoardChanged = true;
         return _reversible.Count;
     }
     public void RemoveDisc(int row, int col)

@@ -6,6 +6,8 @@ public enum BadgeEventType { PASS, POINT, GAMEOVER}
 public class BadgeManager : MonoBehaviour
 {
     [SerializeField]
+    private int _flashCount = 1;
+    [SerializeField]
     private float _flashInterval = 0.5f;
     [SerializeField]
     private float _displayTime = 2.0f;
@@ -100,14 +102,14 @@ public class BadgeManager : MonoBehaviour
                     {
                         // NicePass‚ð•\Ž¦
                         _NicePass = true;
-                        StartCoroutine(ShowBadge(_PanelNicePass, _flashInterval, _displayTime));
+                        StartCoroutine(ShowBadge(_PanelNicePass, _flashCount, _flashInterval, _displayTime));
                     }
                     break;
                 }
                 else
                 {
                     // Selfish‚ð•\Ž¦
-                    StartCoroutine(ShowBadge(_PanelSelfish, _flashInterval, _displayTime));
+                    StartCoroutine(ShowBadge(_PanelSelfish, _flashCount, _flashInterval, _displayTime));
                 }
 
                 break;
@@ -116,22 +118,22 @@ public class BadgeManager : MonoBehaviour
                 if (!_Beginner)
                 {
                     _Beginner = true;
-                    StartCoroutine(ShowBadge(_PanelBeginner, _flashInterval, _displayTime));
+                    StartCoroutine(ShowBadge(_PanelBeginner, _flashCount, _flashInterval, _displayTime));
                 }
                 if (!_FullFledged && _player.PlayerPoint>2)
                 {
                     _FullFledged = true;
-                    StartCoroutine(ShowBadge(_PanelFullFledged, _flashInterval, _displayTime));
+                    StartCoroutine(ShowBadge(_PanelFullFledged, _flashCount, _flashInterval, _displayTime));
                 }
-                if (!_TUEE && _player.PlayerPoint > 4)
+                if (!_TUEE && _player.PlayerPoint > 5)
                 {
                     _TUEE = true;
-                    StartCoroutine(ShowBadge(_PanelTUEE, _flashInterval, _displayTime));
+                    StartCoroutine(ShowBadge(_PanelTUEE, _flashCount, _flashInterval, _displayTime));
                 }
-                if (!_TUEEE && _player.PlayerPoint > 8)
+                if (!_TUEEE && _player.PlayerPoint > 9)
                 {
                     _TUEEE = true;
-                    StartCoroutine(ShowBadge(_PanelTUEEE, _flashInterval, _displayTime));
+                    StartCoroutine(ShowBadge(_PanelTUEEE, _flashCount, _flashInterval, _displayTime));
                 }
                 break;
 
@@ -140,11 +142,11 @@ public class BadgeManager : MonoBehaviour
                 int pointYou = (_gm.PlayerColor == DiscColor.Black) ? _gameBoard.BlackCount : _gameBoard.WhiteCount;
                 if(pointMe == 0)
                 {
-                    StartCoroutine(ShowBadge(_PanelTUEEEE, _flashInterval, _displayTime));
+                    StartCoroutine(ShowBadge(_PanelTUEEEE, _flashCount, _flashInterval, _displayTime));
                 }
                 if(pointYou == 0)
                 {
-                    StartCoroutine(ShowBadge(_PanelZama, _flashInterval, _displayTime));
+                    StartCoroutine(ShowBadge(_PanelZama, _flashCount, _flashInterval, _displayTime));
                 }
                 break;
 
@@ -153,9 +155,9 @@ public class BadgeManager : MonoBehaviour
                 break;
         }
     }
-    IEnumerator ShowBadge(GameObject obj,float sec1, float sec2)
+    IEnumerator ShowBadge(GameObject obj,int flashCount, float sec1, float sec2)
     {
-        for(int i=0; i < 2; i++)
+        for(int i=0; i < flashCount; i++)
         {
             obj.SetActive(true);
             yield return new WaitForSeconds(sec1);
