@@ -128,7 +128,7 @@ public class BadgeManager : MonoBehaviour
                     _TUEE = true;
                     StartCoroutine(ShowBadge(_PanelTUEE, _flashInterval, _displayTime));
                 }
-                if (!_TUEEE && _player.PlayerPoint > 6)
+                if (!_TUEEE && _player.PlayerPoint > 8)
                 {
                     _TUEEE = true;
                     StartCoroutine(ShowBadge(_PanelTUEEE, _flashInterval, _displayTime));

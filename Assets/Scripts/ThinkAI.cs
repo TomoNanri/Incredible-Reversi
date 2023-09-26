@@ -297,18 +297,19 @@ public class ThinkAI : MonoBehaviour
         _currentDepth = 0;
         _predictPos = -1;
         _predictDiscType = DiscType.NORMAL_DISC;
-        Debug.Log($"[ThinkAI] Start thinking! Max depth={_maxDepth}");
 
         // 検討用ボードを作成する
         CellState[,] _cells = ReadBoard(_gameBoard.BoardSize);
         Debug.Log($"[{this.name}] !!! Start of Thinking !!! current={_currentDepth} max={_maxDepth}");
-        ShowBoard(_cells);
+        //ShowBoard(_cells);
         List<int> _candidates = new List<int>();
         SearchSettable(ref _candidates, _cells, _myColor);
         if (!KillerCheck(_candidates, _cells))
         {
-            int beta = 0;
-            var result = await Task.Run(() => Proceed(_cells, _currentDepth, _maxDepth, GameTurn.Me, beta));
+            int alpha = 0;
+            int beta = int.MaxValue;
+
+            var result = await Task.Run(() => Proceed(_cells, _currentDepth, _maxDepth, GameTurn.Me, alpha, beta));
             if(_predictPos != -1 && _gm.UseSpecialDisc)
             {
                 int nextRow = _predictPos / _boardSize;
@@ -330,7 +331,10 @@ public class ThinkAI : MonoBehaviour
 
     private bool KillerCheck(List<int> candidates, CellState[,] board)
     {
-        foreach(int e in candidates)
+        int _maxValue = 0;
+        CellState[,] nextBoard = (CellState[,])board.Clone();
+
+        foreach (int e in candidates)
         {
             int row = e / _boardSize;
             int col = e % _boardSize;
@@ -343,8 +347,14 @@ public class ThinkAI : MonoBehaviour
                 }
                 if (board[row,col-1]==CellState.None  && board[row, col + 1] == CellState.None)
                 {
-                    _predictPos = e;
-                    return true;
+                    nextBoard = (CellState[,])board.Clone();
+                    SetDisc(ref nextBoard, DiscType.NORMAL_DISC, _myColor, row, col);
+                    var v = Evaluate(nextBoard);
+                    if(v > _maxValue)
+                    {
+                        _maxValue = v;
+                        _predictPos = e;
+                    }
                 }
                 if (_gm.UseSpecialDisc && _mySpecialDisc.ItemCount>0)
                 {
@@ -358,8 +368,14 @@ public class ThinkAI : MonoBehaviour
             {
                 if (board[row - 1, col] == CellState.None && board[row + 1, col] == CellState.None)
                 {
-                    _predictPos = e;
-                    return true;
+                    nextBoard = (CellState[,])board.Clone();
+                    SetDisc(ref nextBoard, DiscType.NORMAL_DISC, _myColor, row, col);
+                    var v = Evaluate(nextBoard);
+                    if (v > _maxValue)
+                    {
+                        _maxValue = v;
+                        _predictPos = e;
+                    }
                 }
                 if (_gm.UseSpecialDisc && _mySpecialDisc.ItemCount > 0)
                 {
@@ -370,35 +386,31 @@ public class ThinkAI : MonoBehaviour
                 }
             }
         }
+        if(_maxValue>0)
+            return true;
         return false;
     }
-
-    private int Proceed(CellState[,] currentBoard, int currentDepth,int maxDepth, GameTurn turn, int beta)
+    private int Proceed(CellState[,] currentBoard, int currentDepth, int maxDepth, GameTurn turn, int alpha, int beta)
     {
-        int _stageValue = 0;
         int _subTreeValue;
+        int _stageValue;
+        int _minValue = int.MaxValue;
+        int _maxValue = 0;
 
-        //Debug.Log($"[Thread:{Thread.CurrentThread.ManagedThreadId}] Proceed! depth ={currentDepth}/{maxDepth}");
-
-        // 自分のコマの数を数える       
-        foreach (CellState e in currentBoard)
-        {
-            if (IsMyColor(e))
-            {
-                _stageValue++;
-            }
-        }
 
         // 終端まで来たら局面評価を実行する
 
         if (currentDepth == maxDepth)
         {
-            //Debug.Log($"[Thread:{Thread.CurrentThread.ManagedThreadId}] found leaf! value ={_stageValue}");
-            return _stageValue;
+            return Evaluate(currentBoard);
         }
 
-        //Debug.Log($"### StageValue initialize = {_stageValue}");
+        //if(currentDepth < 4)
+        //{
+        //    Debug.Log($"Proceeding depth={currentDepth} turn={turn} alpha={alpha} beta={beta}");
+        //}
 
+        // この局面で置くコマの色を決める
         var targetColor = (turn == GameTurn.Me) ? _myColor : _yourColor;
         GameTurn nextTurn = (turn == GameTurn.Me) ? GameTurn.You : GameTurn.Me;
 
@@ -410,71 +422,87 @@ public class ThinkAI : MonoBehaviour
         if (_candidateList.Count > 0)
         {
             // 打てるところがあるので各手について先読み継続
-            //ShowReversibleList(_candidateList);
             foreach (int next in _candidateList)
             {
-                if (currentDepth == 0)
-                {
-                    // 予測位置を仮決め（初期化）する
-                    Debug.Log($"===> Cell [{next/_boardSize},{next%_boardSize}] Checking!");
-                    if ( _predictPos == -1)
-                    {
-                        _predictPos = next;
-                    }
-                }
-
-                if (_stageValue > beta)
-                {
-                    if(turn == GameTurn.Me)
-                    {
-                        beta = _stageValue;
-                    }
-                    else
-                    {
-                        //Debug.Log("*** Beta Cut ***");
-                        break;
-                    }
-                }
-
                 int row = next / _gameBoard.BoardSize;
                 int col = next % _gameBoard.BoardSize;
-                CellState[,] nextBoard = (CellState[,])currentBoard.Clone();   // 局面のコピー
-                SetDisc(ref nextBoard, DiscType.NORMAL_DISC, targetColor, row, col);
 
-                _subTreeValue = Proceed(nextBoard, currentDepth+1, maxDepth, nextTurn, beta);   // 先読み実行
                 if (turn == GameTurn.Me)
                 {
-                    // 自分のターンなので最大値を選択する
-                    if (_stageValue < _subTreeValue)
+                    alpha = _maxValue;
+                    if (currentDepth == 0)
                     {
-                        _stageValue = _subTreeValue;
+                        Debug.Log($"=>Start Checking [{row},{col}] alpha={alpha} beta={beta}");
+                    }
+                    if (alpha >= beta)
+                        return beta;
+
+                    // 局面のコピー
+                    CellState[,] nextBoard = (CellState[,])currentBoard.Clone();   
+                    SetDisc(ref nextBoard, DiscType.NORMAL_DISC, targetColor, row, col);
+                    // 先読み実行
+                    _subTreeValue = Proceed(nextBoard, currentDepth + 1, maxDepth, nextTurn, alpha, beta);
+
+                    // 自分のターンなので最大値を選択する
+                    if (_maxValue < _subTreeValue)
+                    {
+                        _maxValue = _subTreeValue;
                         if (currentDepth == 0)
                         {
+                            _subTreeValue = _maxValue;
                             _predictPos = next;
-
-                            Debug.Log($"    ===> Predict [{next / _boardSize},{next % _boardSize}] Value={_stageValue}");
+                            Debug.Log($"   ++++++ Find new Max Value [{row},{col}] = {_subTreeValue} ++++++");
                         }
                     }
                 }
                 else
                 {
+                    beta = _minValue;
+                    if (beta <= alpha)
+                        return alpha;
+
+                    // 局面のコピー
+                    CellState[,] nextBoard = (CellState[,])currentBoard.Clone();
+                    SetDisc(ref nextBoard, DiscType.NORMAL_DISC, targetColor, row, col);
+                    // 先読み実行
+                    _subTreeValue = Proceed(nextBoard, currentDepth + 1, maxDepth, nextTurn, alpha, beta);
+
                     // 相手のターンなので最小値を選択する
-                    if (_stageValue > _subTreeValue)
+                    if (_minValue > _subTreeValue)
                     {
-                        _stageValue = _subTreeValue;
+                        _minValue = _subTreeValue;
                     }
                 }
+            }
+            if (turn == GameTurn.Me)
+            {
+                _stageValue = _maxValue;
+            }
+            else
+            {
+                _stageValue = _minValue;
             }
         }
         else
         {
-            // パスしかないので打たない。
-            //_stageValue = 0;
-            //_stageValue = Proceed(currentBoard, currentDepth+1, maxDepth, nextTurn);
+            // パスしかないので打たない。サブツリーの値がそのまま局面の評価値になる。
+            _stageValue = Proceed(currentBoard, currentDepth + 1, maxDepth, nextTurn, alpha, beta);   // 先読み実行
         }
 
         //Debug.Log($"+++ Current Candiate => [{_predictPos / _boardSize},{_predictPos % _boardSize}]");
         return _stageValue;
+    }
+    private int Evaluate(CellState[,] currentBoard )
+    {
+        int _value = 0; 
+        foreach (CellState e in currentBoard)
+        {
+            if (IsMyColor(e))
+            {
+                _value++;
+            }
+        }
+        return _value;
     }
     private void ShowBoard(CellState[,] board)
     {

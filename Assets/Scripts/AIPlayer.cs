@@ -136,7 +136,7 @@ public class AIPlayer : MonoBehaviour
         _passMessage.SetActive(false);
         _myColor = _gm.PlayerColor==DiscColor.Black?DiscColor.White:DiscColor.Black;
         _aiState = AIState.Waiting;
-        _ai_Level = (int)(_gm.AI_Level * 9.0f +1.0f);
+        _ai_Level = (int)(_gm.AI_Level * 12.0f + 1.0f);
     }
 
     private void ThinkEndHandler()
