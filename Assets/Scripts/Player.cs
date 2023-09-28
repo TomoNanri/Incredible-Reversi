@@ -99,6 +99,11 @@ public class Player : MonoBehaviour
             }
         }
     }
+
+    /// <summary>
+    /// アイテムリストで特殊コマが選択または選択解除された場合のイベントを受け取る
+    /// </summary>
+    /// <param name="state"></param>
     public void OnChangeSpecialDiscUse(bool state)
     {
         //if(state)
@@ -119,6 +124,10 @@ public class Player : MonoBehaviour
         }
         Debug.Log($"[{this.name}] +++ Toggle Changed +++  Color={_myDiscType}");
     }
+
+    /// <summary>
+    /// ゲーム開始時に自身を初期化する
+    /// </summary>
     private void StartGameHandler()
     {
         _myColor = _gm.PlayerColor;
@@ -128,6 +137,10 @@ public class Player : MonoBehaviour
         _warningMessage.SetActive(false);
         _reverseCount = 0;
     }
+
+    /// <summary>
+    /// パスボタンのハンドラ
+    /// </summary>
     public void PassButton()
     {
         _reverseCount = 0;

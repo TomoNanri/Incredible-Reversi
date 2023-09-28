@@ -54,6 +54,12 @@ public class ThinkAI : MonoBehaviour
     {
         
     }
+    
+    /// <summary>
+    /// 現在の盤面を読む
+    /// </summary>
+    /// <param name="size"></param>
+    /// <returns></returns>
     private CellState[,] ReadBoard(int size)
     {
         char[] _trimChar = { 'D', 'i', 's', 'c' }; 
@@ -104,10 +110,13 @@ public class ThinkAI : MonoBehaviour
                     break;
             }
         }
-        //Debug.Log($"[ReadBoard/{this.name}] End!");
-
         return _board;
     }
+    /// <summary>
+    /// 指定したマスが自分の色であれば True を返す
+    /// </summary>
+    /// <param name="s"></param>
+    /// <returns></returns>
     private bool IsMyColor(CellState s)
     {
         if (_myColor == DiscColor.Black)
@@ -116,6 +125,12 @@ public class ThinkAI : MonoBehaviour
         }
         return IsWhite(s);
     }
+
+    /// <summary>
+    /// 指定したマスが黒であれば True を返す
+    /// </summary>
+    /// <param name="s"></param>
+    /// <returns></returns>
     private bool IsBlack(CellState s)
     {
         bool ret = false;
@@ -129,6 +144,12 @@ public class ThinkAI : MonoBehaviour
         }
         return ret;
     }
+
+    /// <summary>
+    /// 指定したマスが白であれば True を返す
+    /// </summary>
+    /// <param name="s"></param>
+    /// <returns></returns>
     private bool IsWhite(CellState s)
     {
         bool ret = false;
@@ -143,6 +164,12 @@ public class ThinkAI : MonoBehaviour
         }
         return ret;
     }
+    
+    /// <summary>
+    /// 指定したマスが特殊コマなら True を返す
+    /// </summary>
+    /// <param name="s"></param>
+    /// <returns></returns>
     private bool IsSpecial(CellState s)
     {
         bool ret = false;
@@ -157,6 +184,15 @@ public class ThinkAI : MonoBehaviour
         }
         return ret;
     }
+    
+    /// <summary>
+    /// 指定したマスがコマを打てるマスなら True を返す
+    /// </summary>
+    /// <param name="cells"></param>
+    /// <param name="color"></param>
+    /// <param name="row"></param>
+    /// <param name="col"></param>
+    /// <returns></returns>
     public bool IsSettable(CellState[,] cells, DiscColor color, int row, int col)
     {
         if (cells[row, col] != CellState.None)
@@ -169,6 +205,15 @@ public class ThinkAI : MonoBehaviour
         return false;
     }
 
+    /// <summary>
+    /// 指定したマスにコマを打ったときに裏返し可能なコマのリストを返す
+    /// </summary>
+    /// <param name="reversible"></param>
+    /// <param name="cells"></param>
+    /// <param name="row"></param>
+    /// <param name="col"></param>
+    /// <param name="isDiscBlack"></param>
+    /// <param name="mode"></param>
     private void MakeReversibleList(ref List<int> reversible, CellState[,] cells, int row, int col, bool isDiscBlack, SearchMode mode)
     {
         List<int> _lineResult = new List<int>();
@@ -183,6 +228,17 @@ public class ThinkAI : MonoBehaviour
             }
         }
     }
+
+    /// <summary>
+    /// 指定されたマスから dirVec で指定された方向へ裏返し可能なコマのリストを返す
+    /// </summary>
+    /// <param name="results"></param>
+    /// <param name="cells"></param>
+    /// <param name="row"></param>
+    /// <param name="col"></param>
+    /// <param name="dirVec"></param>
+    /// <param name="isBlack"></param>
+    /// <param name="mode"></param>
     private void SearchLine(ref List<int> results, CellState[,] cells, int row, int col, Vector2Int dirVec, bool isBlack, SearchMode mode)
     {
         bool foundMyColor = false;
@@ -228,6 +284,13 @@ public class ThinkAI : MonoBehaviour
             results.Clear();
         }
     }
+
+    /// <summary>
+    /// コマを打てる総てのマスのリストを返す
+    /// </summary>
+    /// <param name="result"></param>
+    /// <param name="board"></param>
+    /// <param name="color"></param>
     private void SearchSettable(ref List<int> result, CellState[,] board, DiscColor color)
     {
         for (int i = 0; i < _gameBoard.BoardSize * _gameBoard.BoardSize; i++)
@@ -240,6 +303,15 @@ public class ThinkAI : MonoBehaviour
             }
         }
     }
+
+    /// <summary>
+    /// 指定されたマスにコマを配置し、影響を受けるコマを裏返した結果の盤面を返す
+    /// </summary>
+    /// <param name="board"></param>
+    /// <param name="type"></param>
+    /// <param name="color"></param>
+    /// <param name="row"></param>
+    /// <param name="col"></param>
     private void SetDisc(ref CellState[,] board, DiscType type, DiscColor color, int row, int col)
     {
         // 指定された色に設定する
@@ -263,7 +335,6 @@ public class ThinkAI : MonoBehaviour
             board[row, col] = CellState.FixedWhite;
         }
 
-        //Debug.Log($"--- Disc[{row},{col}] => {board[row,col]}");
 
         // 反転可能なコマのリストを作る
         List<int> _reversible = new List<int>();
@@ -281,9 +352,12 @@ public class ThinkAI : MonoBehaviour
             {
                 board[row, col] = CellState.Black;
             }
-            //Debug.Log($"--- Disc[{row},{col}] => {board[row, col]}");
         }
     }
+
+    /// <summary>
+    /// ゲーム開始時に呼ばれ、AI 側の扱うコマを記憶する
+    /// </summary>
     private void StartGameHandler()
     {
         _myColor = _gm.PlayerColor == DiscColor.Black ? DiscColor.White : DiscColor.Black;
@@ -291,6 +365,12 @@ public class ThinkAI : MonoBehaviour
         var SpecialItemName = (_myColor == DiscColor.Black) ? "SBlack" : "SWhite";
         _mySpecialDisc = GameObject.Find(SpecialItemName).GetComponent<SpecialDiscItem>();
     }
+
+    /// <summary>
+    /// AI Player から呼ばれる先読み処理本体
+    /// </summary>
+    /// <param name="depth"></param>
+    /// <returns></returns>
     public async Task StartThinking(int depth)
     {
         _maxDepth = depth;
@@ -329,6 +409,12 @@ public class ThinkAI : MonoBehaviour
         return;
     }
 
+    /// <summary>
+    /// 無条件で有利な手筋の判定
+    /// </summary>
+    /// <param name="candidates"></param>
+    /// <param name="board"></param>
+    /// <returns></returns>
     private bool KillerCheck(List<int> candidates, CellState[,] board)
     {
         int _maxValue = int.MinValue;
@@ -393,6 +479,17 @@ public class ThinkAI : MonoBehaviour
         }
         return false;
     }
+
+    /// <summary>
+    /// αβ法による先読み処理（別スレッド）
+    /// </summary>
+    /// <param name="currentBoard"></param>
+    /// <param name="currentDepth"></param>
+    /// <param name="maxDepth"></param>
+    /// <param name="turn"></param>
+    /// <param name="alpha"></param>
+    /// <param name="beta"></param>
+    /// <returns></returns>
     private int Proceed(CellState[,] currentBoard, int currentDepth, int maxDepth, GameTurn turn, int alpha, int beta)
     {
         int _subTreeValue;
@@ -407,11 +504,6 @@ public class ThinkAI : MonoBehaviour
         {
             return Evaluate(currentBoard);
         }
-
-        //if(currentDepth < 4)
-        //{
-        //    Debug.Log($"Proceeding depth={currentDepth} turn={turn} alpha={alpha} beta={beta}");
-        //}
 
         // この局面で置くコマの色を決める
         var targetColor = (turn == GameTurn.Me) ? _myColor : _yourColor;
@@ -438,7 +530,7 @@ public class ThinkAI : MonoBehaviour
                         Debug.Log($"=>Start Checking [{row},{col}] alpha={alpha} beta={beta}");
                     }
                     if (alpha >= beta)
-                        return beta;
+                        return beta;    // βカット
 
                     // 局面のコピー
                     CellState[,] nextBoard = (CellState[,])currentBoard.Clone();   
@@ -462,7 +554,7 @@ public class ThinkAI : MonoBehaviour
                 {
                     beta = _minValue;
                     if (beta <= alpha)
-                        return alpha;
+                        return alpha;   // αカット
 
                     // 局面のコピー
                     CellState[,] nextBoard = (CellState[,])currentBoard.Clone();
@@ -496,6 +588,9 @@ public class ThinkAI : MonoBehaviour
         return _stageValue;
     }
 
+/// <summary>
+/// 盤面のコマごとの重み
+/// </summary>
     private int[,] _cellValue = { {  30, -12,   0,  -1,  -1,   0, -12,  30},
                                   { -12, -15,  -3,  -3,  -3,  -3, -15, -12},
                                   {   0,  -3,   0,  -1,  -1,   0,  -3,   0},
@@ -504,6 +599,12 @@ public class ThinkAI : MonoBehaviour
                                   {   0,  -3,   0,  -1,  -1,   0,  -3,   0},
                                   { -12, -15,  -3,  -3,  -3,  -3, -15, -12},
                                   {  30, -12,   0,  -1,  -1,   0, -12,  30}};
+    
+    /// <summary>
+    /// 局面評価関数
+    /// </summary>
+    /// <param name="currentBoard"></param>
+    /// <returns></returns>
     private int Evaluate(CellState[,] currentBoard)
     {
         int _value = 0;
@@ -518,6 +619,11 @@ public class ThinkAI : MonoBehaviour
         }
         return _value;
     }
+
+    /// <summary>
+    /// 盤面をテキストで表示する（デバッグ用）
+    /// </summary>
+    /// <param name="board"></param>
     private void ShowBoard(CellState[,] board)
     {
         for (int r = 7; r >= 0; r--)
@@ -525,6 +631,11 @@ public class ThinkAI : MonoBehaviour
             Debug.Log($"  {board[r, 0]} {board[r, 1]} {board[r, 2]} {board[r, 3]} {board[r, 4]} {board[r, 5]} {board[r, 6]} {board[r, 7]}");
         }
     }
+
+    /// <summary>
+    /// コマを打てるか所をテキスト表示する（デバッグ用）
+    /// </summary>
+    /// <param name="vs"></param>
     private void ShowReversibleList(List<int> vs)
     {
         foreach(int e in vs)

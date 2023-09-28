@@ -46,12 +46,6 @@ public class AIPlayer : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        //_debugTimer += Time.deltaTime;
-        //if (_debugTimer > 0.1f)
-        //{
-        //    _debugTimer = 0;
-        //    Debug.Log($"[{this.name}]   AI State = {_aiState} Game State = {_gm.GameState} Turn = {_gm.GameTurn}");
-        //}
         switch(_aiState)
         {
             case AIState.Waiting:
@@ -131,6 +125,10 @@ public class AIPlayer : MonoBehaviour
         }
 
     }
+
+    /// <summary>
+    /// ゲームの開始時呼ばれ自身を初期化する
+    /// </summary>
     private void StartGameHandler()
     {
         _passMessage.SetActive(false);
@@ -139,6 +137,9 @@ public class AIPlayer : MonoBehaviour
         _ai_Level = (int)(_gm.AI_Level * 14.0f + 1.0f);
     }
 
+    /// <summary>
+    /// 先読み処理の完了をハンドルする
+    /// </summary>
     private void ThinkEndHandler()
     {
         if(_aiState == AIState.Thinking)

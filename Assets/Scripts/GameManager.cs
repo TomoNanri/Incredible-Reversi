@@ -176,6 +176,12 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
                 break;
         }
     }
+
+    /// <summary>
+    /// ƒ^[ƒ“Œğ‘ã‚ÌŠÔ‚ğæ‚é
+    /// </summary>
+    /// <param name="sec"></param>
+    /// <returns></returns>
     private IEnumerator StartNextTurn(float sec)
     {
         Debug.Log($"[{this.name}]Waiting for Next turn Start... Current State = {_gameState}]");

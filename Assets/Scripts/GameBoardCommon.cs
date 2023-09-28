@@ -99,10 +99,18 @@ public class GameBoardCommon : MonoBehaviour
             }
         }
     }
+
+    /// <summary>
+    /// ゲームスタートイベント発生時のハンドラ
+    /// </summary>
     private void StartHandler()
     {
         StartCoroutine(BoardSetUp(_reverseInterval));
     }
+
+    /// <summary>
+    /// ゲーム初期化イベント発生時のハンドラ。ボード上の総てのコマを消す
+    /// </summary>
     private void InitializeHandler()
     {
         foreach (Transform child in this.transform)
@@ -120,6 +128,12 @@ public class GameBoardCommon : MonoBehaviour
         }
         _isBoardChanged = false;
     }
+
+    /// <summary>
+    /// 中心４マスにコマを配置する
+    /// </summary>
+    /// <param name="sec"></param>
+    /// <returns></returns>
     private IEnumerator BoardSetUp(float sec)
     {
         SetDisc(DiscType.NORMAL_DISC, DiscColor.Black, 3, 3);
@@ -135,6 +149,11 @@ public class GameBoardCommon : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// コマが打たれた後の裏返しを一コマずつ時間をあけて実施する
+    /// </summary>
+    /// <param name="seconds"></param>
+    /// <returns></returns>
     private IEnumerator BoardUpdate(float seconds)
     {
         foreach (GameObject disc in _reversible)
@@ -148,6 +167,15 @@ public class GameBoardCommon : MonoBehaviour
         }
         IsReversingCompleted = true;
     }
+
+    /// <summary>
+    /// 指定したマスにコマを打ったときに裏返し可能なコマのリストを返す
+    /// </summary>
+    /// <param name="reversible"></param>
+    /// <param name="row"></param>
+    /// <param name="col"></param>
+    /// <param name="isDiscBlack"></param>
+    /// <param name="mode"></param>
     private void MakeReversibleList(ref List<GameObject> reversible, int row, int col, bool isDiscBlack, SearchMode mode)
     {
         List<GameObject> _lineResult = new List<GameObject>();
@@ -163,6 +191,15 @@ public class GameBoardCommon : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 指定されたマスから dirVec で指定された方向へ裏返し可能なコマのリストを返す
+    /// </summary>
+    /// <param name="results"></param>
+    /// <param name="row"></param>
+    /// <param name="col"></param>
+    /// <param name="dirVec"></param>
+    /// <param name="isBlack"></param>
+    /// <param name="mode"></param>
     private void SearchLine(ref List<GameObject> results, int row, int col, Vector2Int dirVec, bool isBlack, SearchMode mode)
     {
         bool foundMe = false;
@@ -211,6 +248,14 @@ public class GameBoardCommon : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 指定されたマスにコマを配置し、影響を受けるコマを裏返した結果の盤面を返す
+    /// </summary>
+    /// <param name="dt"></param>
+    /// <param name="color"></param>
+    /// <param name="row"></param>
+    /// <param name="col"></param>
+    /// <returns></returns>
     public int SetDisc(DiscType dt, DiscColor color, int row, int col)
     {
         // Board の child としてインスタンスを生成する
@@ -245,11 +290,25 @@ public class GameBoardCommon : MonoBehaviour
         _isBoardChanged = true;
         return _reversible.Count;
     }
+
+    /// <summary>
+    /// 指定されたマスからコマを取り除く
+    /// </summary>
+    /// <param name="row"></param>
+    /// <param name="col"></param>
     public void RemoveDisc(int row, int col)
     {
         Destroy(_discs[row, col]);
         _discs[row, col] = null;
     }
+
+    /// <summary>
+    /// 指定したマスがコマを打てるマスなら True を返す
+    /// </summary>
+    /// <param name="color"></param>
+    /// <param name="row"></param>
+    /// <param name="col"></param>
+    /// <returns></returns>
     public bool IsSettable(DiscColor color, int row, int col)
     {
         if (_discs[row, col] != null)
@@ -261,6 +320,12 @@ public class GameBoardCommon : MonoBehaviour
             return true;
         return false;
     }
+
+    /// <summary>
+    /// 指定された色のコマを打てるマスがあれば True を返す。（終了判定用）
+    /// </summary>
+    /// <param name="color"></param>
+    /// <returns></returns>
     public bool IsExisting(DiscColor color)
     {
         for(int i = 0; i < _boardSize; i++)

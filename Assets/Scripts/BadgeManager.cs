@@ -125,7 +125,7 @@ public class BadgeManager : MonoBehaviour
                     _FullFledged = true;
                     StartCoroutine(ShowBadge(_PanelFullFledged, _flashCount, _flashInterval, _displayTime));
                 }
-                if (!_TUEE && _player.PlayerPoint > 5)
+                if (!_TUEE && _player.PlayerPoint > 6)
                 {
                     _TUEE = true;
                     StartCoroutine(ShowBadge(_PanelTUEE, _flashCount, _flashInterval, _displayTime));
