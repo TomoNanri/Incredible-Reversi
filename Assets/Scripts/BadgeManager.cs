@@ -120,17 +120,17 @@ public class BadgeManager : MonoBehaviour
                     _Beginner = true;
                     StartCoroutine(ShowBadge(_PanelBeginner, _flashCount, _flashInterval, _displayTime));
                 }
-                if (!_FullFledged && _player.PlayerPoint>2)
+                if (!_FullFledged && _player.PlayerPoint>1)
                 {
                     _FullFledged = true;
                     StartCoroutine(ShowBadge(_PanelFullFledged, _flashCount, _flashInterval, _displayTime));
                 }
-                if (!_TUEE && _player.PlayerPoint > 6)
+                if (!_TUEE && _player.PlayerPoint > 4)
                 {
                     _TUEE = true;
                     StartCoroutine(ShowBadge(_PanelTUEE, _flashCount, _flashInterval, _displayTime));
                 }
-                if (!_TUEEE && _player.PlayerPoint > 9)
+                if (!_TUEEE && _player.PlayerPoint > 8)
                 {
                     _TUEEE = true;
                     StartCoroutine(ShowBadge(_PanelTUEEE, _flashCount, _flashInterval, _displayTime));
